@@ -1,18 +1,30 @@
-# Swarm Robotics: Decentralized Cooperative Transport
-This simulation models emergent mechanical and chemical stigmergy in decentralized swarm robotics. The project investigates how swarm size and payload geometry influence the success rates and kinematic constraints (mechanical debt) during cooperative transport through narrow bottlenecks.
+# Decentralized Cooperative Transport: Scaling Laws & Mechanical Stigmergy
+A physics-based investigation into how swarm size and payload geometry influence cooperative transport and kinematic gridlock, free from reinforcement learning bias.
 
 ## 🚀 Getting Started
-1. **Environment Setup:** Ensure you have Python 3.12+ installed.
-2. **Virtual Environment:**
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+- **Prerequisites:** Python 3.12+ (LTS)
+- **Dependency Installation:**
+  ```bash
+  python -m venv venv
+  .\venv\Scripts\activate
+  pip install pymunk pygame numpy pandas matplotlib
+  ```
 
-## Architecture & Pseudocode
+## ⚙️ Running the Experiments
 
-This document provides formal pseudocode for the existing physics-based simulation architecture, detailing the role of each module in the mechanical and chemical stigmergy pipeline.
+**Batch Data Collection:** To run the automated 1,000-trial experiment, execute:
+```bash
+python experiment_runner.py
+```
+
+**Real-Time Visualization:** To observe the swarm mechanics and jamming behaviors visually, execute:
+```bash
+python simulation_manager.py
+```
+*Note: Use `[Spacebar]` to pause and `V` to toggle pheromone heatmap visibility.*
+
+## 📂 Architecture
+
 
 ## Summary Table
 

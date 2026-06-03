@@ -54,3 +54,8 @@ This journal tracks the experimental progress, observations, and iterative tunin
 * **[PHASE/TASK]** Statistical Data Analysis & Plotting
 * **[OBSERVATION/RESULT]** Generated 3 primary thesis plots (Success Rate vs Size, Completion Time Distribution, Jamming Frequency) from the 1,000-run batch experiment. Quantified the success thresholds and kinematic gridlock for non-convex shapes.
 * **[NEXT STEP]** Prepare the figures and summary for the supervisor presentation.
+
+* **[TIMESTAMP]** 2026-06-03 22:02
+* **[PHASE/TASK]** README Documentation & User Manual
+* **[OBSERVATION/RESULT]** Created a standardized installation and execution workflow.
+* **[NEXT STEP]** Ready for supervisor review and final thesis presentation.
