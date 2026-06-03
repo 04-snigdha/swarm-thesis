@@ -1,4 +1,16 @@
-# Swarm Robotics Simulation Architecture
+# Swarm Robotics: Decentralized Cooperative Transport
+This simulation models emergent mechanical and chemical stigmergy in decentralized swarm robotics. The project investigates how swarm size and payload geometry influence the success rates and kinematic constraints (mechanical debt) during cooperative transport through narrow bottlenecks.
+
+## 🚀 Getting Started
+1. **Environment Setup:** Ensure you have Python 3.12+ installed.
+2. **Virtual Environment:**
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+## Architecture & Pseudocode
 
 This document provides formal pseudocode for the existing physics-based simulation architecture, detailing the role of each module in the mechanical and chemical stigmergy pipeline.
 
