@@ -1,0 +1,5 @@
+Trial_ID,Swarm_Size,Shape,Success,Completion_Time
+1,10,Circle,False,20.0
+1,10,Circle,False,20.0
+1,10,Circle,True,19.48333333333351
+1,10,Circle,False,20.0
