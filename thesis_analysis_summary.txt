@@ -3,43 +3,43 @@ Thesis Analysis Summary - Scaling Laws for Decentralized Swarm Robotics
 1. Tipping Point for Gap Traversal:
 Based on the success rates, we observe a distinct transition point where the swarm achieves critical mass to overcome the gap's physical bottleneck.
       Shape  Swarm_Size    Success
-0   C-shape           5   1.587302
-1   C-shape          10  12.698413
-2   C-shape          20  29.032258
-3   C-shape          40  53.225806
-4    Circle           5   7.936508
-5    Circle          10  22.222222
-6    Circle          20  27.419355
-7    Circle          40  48.387097
-8   L-shape           5   6.349206
-9   L-shape          10  15.873016
-10  L-shape          20  33.870968
-11  L-shape          40  59.677419
+0   C-shape           5   9.523810
+1   C-shape          10  11.111111
+2   C-shape          20  23.655914
+3   C-shape          40  28.494624
+4    Circle           5   8.465608
+5    Circle          10  16.931217
+6    Circle          20  17.741935
+7    Circle          40  27.419355
+8   L-shape           5   8.994709
+9   L-shape          10  13.227513
+10  L-shape          20  22.448980
+11  L-shape          40  31.182796
 12   Square           5   7.936508
-13   Square          10   4.761905
-14   Square          20  20.967742
-15   Square          40  41.935484
+13   Square          10   8.994709
+14   Square          20  18.817204
+15   Square          40  25.806452
 (Note: Analysis of this table typically reveals whether N=10 or N=20 is the minimum density required for consistent success).
 
 2. Impact of Non-Convex Geometry:
 Mean completion times for successful runs:
       Shape  Swarm_Size  Completion_Time
-0   C-shape           5        14.233333
-1   C-shape          10         9.889583
-2   C-shape          20         9.589815
-3   C-shape          40         7.239394
-4    Circle           5        15.703333
-5    Circle          10        13.873810
-6    Circle          20        13.436275
-7    Circle          40         9.336667
-8   L-shape           5        11.075000
-9   L-shape          10        11.558333
-10  L-shape          20         9.776190
-11  L-shape          40         7.275676
-12   Square           5        11.703333
-13   Square          10         9.316667
-14   Square          20         9.915385
-15   Square          40         8.814744
+0   C-shape           5        35.465741
+1   C-shape          10        26.911905
+2   C-shape          20        22.976515
+3   C-shape          40        19.661321
+4    Circle           5        34.179167
+5    Circle          10        28.154167
+6    Circle          20        24.542929
+7    Circle          40        18.822222
+8   L-shape           5        34.462745
+9   L-shape          10        27.159333
+10  L-shape          20        21.422348
+11  L-shape          40        18.054598
+12   Square           5        24.586667
+13   Square          10        26.485294
+14   Square          20        27.495238
+15   Square          40        18.597569
 The box plots (completion_time_distribution.png) visually confirm that non-convex shapes (L-shape, C-shape) exhibit extreme variance and delayed completion times. This is direct empirical evidence of "mechanical debt," where the shape hooks onto the gap edges, causing kinematic gridlock.
 
 3. Decentralized Mechanical Stigmergy Sufficiency:

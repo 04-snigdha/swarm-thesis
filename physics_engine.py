@@ -1,6 +1,31 @@
-# physics_engine.py
 import pymunk
 import config
+import math
+
+def agent_target_post_solve(arbiter, space, data):
+    agent_shape, target_shape = arbiter.shapes
+    agent = getattr(agent_shape, 'agent', None)
+    
+    # Prevent latching if agent is shuffling
+    if agent and getattr(agent, 'state', None) == "SHUFFLING":
+        return
+        
+    if agent and not getattr(agent, 'active_joint', None):
+        # Upon contact with Target, switches to RETRIEVING
+        agent.state = "RETRIEVING"
+        
+        target_body = target_shape.body
+        
+        # Create a PivotJoint at the contact point
+        if len(arbiter.contact_point_set.points) > 0:
+            contact = arbiter.contact_point_set.points[0].point_a
+            anchor_on_target = target_body.world_to_local(contact)
+            
+            # (a, b, anchor_a, anchor_b)
+            joint = pymunk.PivotJoint(agent.body, target_body, (0, 0), anchor_on_target)
+            joint.max_force = 10000  # compliant grip
+            space.add(joint)
+            agent.active_joint = joint
 
 class PhysicsEngine:
     def __init__(self):
@@ -8,6 +33,9 @@ class PhysicsEngine:
         self.space = pymunk.Space()
         self.space.damping = config.DAMPING # Simulate friction/drag
         self.target_body = None
+        
+        # Pymunk 7+ syntax for collision handlers
+        self.space.on_collision(config.COLLISION_TYPE_AGENT, config.COLLISION_TYPE_TARGET, post_solve=agent_target_post_solve)
         
     def generate_walls(self, width=config.ARENA_WIDTH, height=config.ARENA_HEIGHT, gap_size=config.GAP_WIDTH, wall_thickness=config.WALL_THICKNESS):
         """Generates the static arena boundaries with a central wall that has a gap."""
@@ -89,6 +117,7 @@ class PhysicsEngine:
         for s in shapes:
             s.elasticity = config.ELASTICITY
             s.friction = config.FRICTION
+            s.collision_type = config.COLLISION_TYPE_TARGET
             
         self.space.add(body, *shapes)
         self.target_body = body
@@ -96,4 +125,8 @@ class PhysicsEngine:
 
     def step(self, dt):
         """Advances the physics simulation by dt seconds."""
+        if self.target_body:
+            # Simulate viscosity of the environment
+            self.target_body.angular_velocity *= 0.95
+            self.target_body.velocity = self.target_body.velocity * 0.98
         self.space.step(dt)

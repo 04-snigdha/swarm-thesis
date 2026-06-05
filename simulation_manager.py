@@ -5,6 +5,8 @@ from stigmergy_grid import PheromoneGrid
 from swarm_agents import Agent
 from data_logger import DataLogger
 import random
+import math
+import collections
 
 try:
     from visualizer import Visualizer
@@ -29,23 +31,31 @@ class SimulationManager:
         self.agents = []
         self.timer = 0.0
         self.target_shape_type = shape_type
+        self.target_velocities = collections.deque(maxlen=60)
         
-        # Spawn Target
-        target_pos = (config.ARENA_WIDTH / 4, config.ARENA_HEIGHT / 2) # Left side
+        # Pass agents reference to space for physics engine callbacks
+        self.physics.space.agents = self.agents
+        
+        # Spawn Target in FORAGE_ZONE (Left)
+        fx, fy, fw, fh = config.FORAGE_ZONE
+        target_pos = (fx + fw/2, fy + fh/2)
         self.physics.spawn_target_shape(shape_type, target_pos)
         
-        # Spawn Agents around the target
+        # Spawn Agents in HOME_ZONE (Right)
+        hx, hy, hw, hh = config.HOME_ZONE
         for _ in range(swarm_size):
-            # Spawn in a cluster near the target
-            ax = target_pos[0] + random.uniform(-100, 100)
-            ay = target_pos[1] + random.uniform(-100, 100)
+            ax = random.uniform(hx, hx + hw)
+            ay = random.uniform(hy, hy + hh)
             agent = Agent(self.physics.space, (ax, ay))
             self.agents.append(agent)
 
-    def shape_through_gap(self):
-        """Checks if the target body has passed through the central gap (x > width/2)."""
+    def is_trial_successful(self):
         if self.physics.target_body:
-            return self.physics.target_body.position.x > config.ARENA_WIDTH / 2
+            target_pos = self.physics.target_body.position
+            hx, hy = config.HOME_BASE_COORD
+            dist = math.sqrt((target_pos.x - hx)**2 + (target_pos.y - hy)**2)
+            if dist < 100:
+                return True
         return False
 
     def run_trial(self, swarm_size, shape_type, trial_id=None, quiet=False, visualize=False):
@@ -67,7 +77,8 @@ class SimulationManager:
             vis = Visualizer(self.physics.space, self.pheromones)
             clock = pygame.time.Clock()
         
-        while self.timer < config.SIMULATION_TIME_LIMIT:
+        import math
+        while True:
             if vis:
                 running = vis.handle_events()
                 if not running:
@@ -80,38 +91,68 @@ class SimulationManager:
             # 1. Update Pheromones (Chemical Stigmergy)
             self.pheromones.diffuse_and_decay()
             
-            # 2. Agent Decisions
+            # 2. Agent Decisions & Vector Deposition
+            num_attached = len([a for a in self.agents if getattr(a, 'active_joint', None)])
             for agent in self.agents:
-                # Simple logic wrapper for the thesis:
-                # Switch to RETRIEVING if they are close to the target
-                dist_to_target = agent.body.position.get_distance(self.physics.target_body.position)
-                if dist_to_target < 100:
-                    agent.state = "RETRIEVING"
-                    
+                # Conditional Stigmergy: First agent acts as beacon.
+                if agent.state == "RETRIEVING" and num_attached > 0 and getattr(agent, 'active_joint', None):
+                    hx = config.HOME_BASE_COORD[0]
+                    hy = config.HOME_BASE_COORD[1]
+                    target_pos = self.physics.target_body.position
+                    dx, dy = hx - target_pos.x, hy - target_pos.y
+                    mag = math.sqrt(dx**2 + dy**2)
+                    if mag > 0:
+                        # Vector strength increases proportionally to num_attached
+                        self.pheromones.deposit_pheromone(agent.body.position, (dx/mag * num_attached, dy/mag * num_attached), layer=1)
+                
+                elif agent.state == "RETURN_TO_BASE":
+                    target_pos = self.physics.target_body.position
+                    dx, dy = target_pos.x - agent.body.position.x, target_pos.y - agent.body.position.y
+                    mag = math.sqrt(dx**2 + dy**2)
+                    if mag > 0:
+                        self.pheromones.deposit_pheromone(agent.body.position, (dx/mag, dy/mag), layer=2)
+                        
                 local_grad = self.pheromones.get_gradient(agent.body.position)
-                agent.apply_movement_logic(local_grad)
+                agent.apply_movement_logic(local_grad, self.physics.target_body, self.agents)
+                
+                # Cleanup detached joints if any logic error caused a state flip
+                if agent.state != "RETRIEVING" and getattr(agent, 'active_joint', None):
+                    self.physics.space.remove(agent.active_joint)
+                    agent.active_joint = None
                 
             # 3. Physics Step (Mechanical Stigmergy)
             self.physics.step(dt)
+            
+            # 4. Jam Detection (Stochastic Shuffling)
+            if self.physics.target_body:
+                vel = self.physics.target_body.velocity
+                speed = math.sqrt(vel.x**2 + vel.y**2)
+                self.target_velocities.append(speed)
+                
+                if len(self.target_velocities) == 60:
+                    avg_speed = sum(self.target_velocities) / 60.0
+                    if avg_speed < 5.0:
+                        # Jam Detected! Trigger Return to Base logic
+                        for agent in self.agents:
+                            if agent.state == "RETRIEVING" and getattr(agent, 'active_joint', None):
+                                self.physics.space.remove(agent.active_joint)
+                                agent.active_joint = None
+                                agent.state = "RETURN_TO_BASE"
+                                agent.state_timer = 60
+                        self.target_velocities.clear()
             
             if vis:
                 vis.update(self.agents, self.timer)
                 clock.tick(config.FPS)
             
             # 4. Check Trial End Conditions
-            if self.shape_through_gap():
+            if self.is_trial_successful():
                 if not quiet:
                     print(f"  -> SUCCESS! Time: {self.timer:.2f}s")
                 self.logger.log_trial(self.trial_count, swarm_size, shape_type, True, self.timer)
                 return True
                 
             self.timer += dt
-            
-        # Failed to push through in time
-        if not quiet:
-            print(f"  -> FAILED. Time limit reached.")
-        self.logger.log_trial(self.trial_count, swarm_size, shape_type, False, config.SIMULATION_TIME_LIMIT)
-        return False
         
 if __name__ == "__main__":
     # Small test run with visualization enabled

@@ -36,34 +36,68 @@ class Visualizer:
         return True
 
     def _draw_pheromones(self):
-        """Draw the vector pheromone grid as a heatmap."""
+        """Draw the vector pheromone grid as arrows."""
         if not self.show_pheromones:
             return
             
         cell_size = self.pheromones.cell_size
-        rows, cols, _ = self.pheromones.grid.shape
-        
-        heatmap_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        rows, cols, _, _ = self.pheromones.grid.shape
         
         for r in range(rows):
             for c in range(cols):
-                vx, vy = self.pheromones.grid[r, c, 0], self.pheromones.grid[r, c, 1]
-                magnitude = math.sqrt(vx**2 + vy**2)
+                cx = c * cell_size + cell_size / 2
+                cy = r * cell_size + cell_size / 2
                 
-                if magnitude > 0.01:
-                    # Normalize alpha based on magnitude
-                    alpha = min(255, int(magnitude * 50))
-                    color = (255, 255, 0, alpha) # Yellow heat
-                    rect = (c * cell_size, r * cell_size, cell_size, cell_size)
-                    pygame.draw.rect(heatmap_surface, color, rect)
+                # Layer 0 (Search Vector) - Red
+                svx, svy = self.pheromones.grid[r, c, 0, 0], self.pheromones.grid[r, c, 0, 1]
+                smag = math.sqrt(svx**2 + svy**2)
+                if smag > 0.05:
+                    end_x = cx + (svx/smag) * cell_size
+                    end_y = cy + (svy/smag) * cell_size
+                    pygame.draw.line(self.screen, (255, 0, 0), (cx, cy), (end_x, end_y), 1)
                     
-        self.screen.blit(heatmap_surface, (0, 0))
+                # Layer 1 (Home Vector) - Blue
+                hvx, hvy = self.pheromones.grid[r, c, 1, 0], self.pheromones.grid[r, c, 1, 1]
+                hmag = math.sqrt(hvx**2 + hvy**2)
+                if hmag > 0.05:
+                    end_x = cx + (hvx/hmag) * cell_size
+                    end_y = cy + (hvy/hmag) * cell_size
+                    pygame.draw.line(self.screen, (0, 0, 255), (cx, cy), (end_x, end_y), 2)
+                    
+                # Layer 2 (Help-Signal Vector) - Purple
+                helpvx, helpvy = self.pheromones.grid[r, c, 2, 0], self.pheromones.grid[r, c, 2, 1]
+                helpmag = math.sqrt(helpvx**2 + helpvy**2)
+                if helpmag > 0.05:
+                    end_x = cx + (helpvx/helpmag) * cell_size
+                    end_y = cy + (helpvy/helpmag) * cell_size
+                    pygame.draw.line(self.screen, (128, 0, 128), (cx, cy), (end_x, end_y), 3)
+                    
+    def _draw_zones(self):
+        """Draws faint rectangles for Home and Forage zones."""
+        zone_surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        
+        # Forage Zone (Red)
+        fx, fy, fw, fh = config.FORAGE_ZONE
+        pygame.draw.rect(zone_surface, (255, 0, 0, 30), (fx, fy, fw, fh))
+        
+        # Home Zone (Green)
+        hx, hy, hw, hh = config.HOME_ZONE
+        pygame.draw.rect(zone_surface, (0, 255, 0, 30), (hx, hy, hw, hh))
+        
+        self.screen.blit(zone_surface, (0, 0))
         
     def _draw_agents(self, agents):
         """Draw agents with color coding based on state."""
         for agent in agents:
             pos = int(agent.body.position.x), int(agent.body.position.y)
-            color = (0, 255, 0) if agent.state == "SEARCHING" else (0, 100, 255)
+            if agent.state == "SEARCHING":
+                color = (0, 255, 0)
+            elif agent.state == "RETURN_TO_BASE":
+                color = (255, 165, 0) # Orange
+            elif agent.state == "RETURNING_TO_TARGET":
+                color = (128, 0, 128) # Purple
+            else:
+                color = (0, 100, 255) # Retrieving / Intercepting
             pygame.draw.circle(self.screen, color, pos, config.AGENT_RADIUS)
             
             # Heading line
@@ -75,6 +109,9 @@ class Visualizer:
     def update(self, agents, timer):
         """Render a single frame."""
         self.screen.fill((240, 240, 240)) # Light gray background
+        
+        # 0. Spatial Zones
+        self._draw_zones()
         
         # 1. Stigmergy Layer (Pheromones)
         self._draw_pheromones()
