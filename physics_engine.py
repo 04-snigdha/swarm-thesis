@@ -2,14 +2,49 @@ import pymunk
 import config
 import math
 
-def agent_target_post_solve(arbiter, space, data):
-    agent_shape, target_shape = arbiter.shapes
+def agent_small_post_solve(arbiter, space, data):
+    """Latch an agent onto a small object when they collide."""
+    shape_a, shape_b = arbiter.shapes
+    if shape_a.collision_type == config.COLLISION_TYPE_AGENT:
+        agent_shape, small_shape = shape_a, shape_b
+    else:
+        agent_shape, small_shape = shape_b, shape_a
+
     agent = getattr(agent_shape, 'agent', None)
-    
-    # Prevent latching if agent is shuffling
-    if agent and getattr(agent, 'state', None) == "SHUFFLING":
+    if not agent:
         return
-        
+
+    # Only latch if agent is actively intercepting this small object and not already carrying
+    if agent.state != "INTERCEPT_SMALL" or agent.carry_joint:
+        return
+
+    # Don't grab an object already being carried by another agent
+    if getattr(small_shape.body, 'carried', False):
+        return
+
+    small_shape.body.carried = True
+    agent.carried_body = small_shape.body
+
+    if len(arbiter.contact_point_set.points) > 0:
+        contact = arbiter.contact_point_set.points[0].point_a
+        anchor = small_shape.body.world_to_local(contact)
+        joint = pymunk.PivotJoint(agent.body, small_shape.body, (0, 0), anchor)
+        joint.max_force = 5000
+        space.add(joint)
+        agent.carry_joint = joint
+        agent.state = "CARRYING"
+
+
+def agent_target_post_solve(arbiter, space, data):
+    # Determine which shape is the agent and which is the target
+    shape_a, shape_b = arbiter.shapes
+    if shape_a.collision_type == config.COLLISION_TYPE_AGENT:
+        agent_shape, target_shape = shape_a, shape_b
+    else:
+        agent_shape, target_shape = shape_b, shape_a
+
+    agent = getattr(agent_shape, 'agent', None)
+
     if agent and not getattr(agent, 'active_joint', None):
         # Upon contact with Target, switches to RETRIEVING
         agent.state = "RETRIEVING"
@@ -34,8 +69,8 @@ class PhysicsEngine:
         self.space.damping = config.DAMPING # Simulate friction/drag
         self.target_body = None
         
-        # Pymunk 7+ syntax for collision handlers
         self.space.on_collision(config.COLLISION_TYPE_AGENT, config.COLLISION_TYPE_TARGET, post_solve=agent_target_post_solve)
+        self.space.on_collision(config.COLLISION_TYPE_AGENT, config.COLLISION_TYPE_SMALL, post_solve=agent_small_post_solve)
         
     def generate_walls(self, width=config.ARENA_WIDTH, height=config.ARENA_HEIGHT, gap_size=config.GAP_WIDTH, wall_thickness=config.WALL_THICKNESS):
         """Generates the static arena boundaries with a central wall that has a gap."""
@@ -122,6 +157,25 @@ class PhysicsEngine:
         self.space.add(body, *shapes)
         self.target_body = body
         return body
+
+    def spawn_small_objects(self, count=config.SMALL_OBJECT_COUNT):
+        """Spawns small foraging objects randomly inside the FORAGE_ZONE."""
+        import random
+        fx, fy, fw, fh = config.FORAGE_ZONE
+        bodies = []
+        for _ in range(count):
+            x = random.uniform(fx + config.SMALL_OBJECT_RADIUS, fx + fw - config.SMALL_OBJECT_RADIUS)
+            y = random.uniform(fy + config.SMALL_OBJECT_RADIUS, fy + fh - config.SMALL_OBJECT_RADIUS)
+            body = pymunk.Body(config.SMALL_OBJECT_MASS, float('inf'))
+            body.position = (x, y)
+            body.carried = False
+            shape = pymunk.Circle(body, config.SMALL_OBJECT_RADIUS)
+            shape.elasticity = config.ELASTICITY
+            shape.friction = config.FRICTION
+            shape.collision_type = config.COLLISION_TYPE_SMALL
+            self.space.add(body, shape)
+            bodies.append(body)
+        return bodies
 
     def step(self, dt):
         """Advances the physics simulation by dt seconds."""

@@ -4,7 +4,7 @@ from simulation_manager import SimulationManager
 from data_logger import DataLogger
 import random
 
-def run_batch_experiment(total_trials=1000):
+def run_batch_experiment(total_trials=4000):
     manager = SimulationManager()
     
     # We have 4 sizes and 4 shapes = 16 combinations

@@ -32,14 +32,18 @@ class SimulationManager:
         self.timer = 0.0
         self.target_shape_type = shape_type
         self.target_velocities = collections.deque(maxlen=60)
-        
+        self.small_objects = []
+
         # Pass agents reference to space for physics engine callbacks
         self.physics.space.agents = self.agents
-        
+
         # Spawn Target in FORAGE_ZONE (Left)
         fx, fy, fw, fh = config.FORAGE_ZONE
         target_pos = (fx + fw/2, fy + fh/2)
         self.physics.spawn_target_shape(shape_type, target_pos)
+
+        # Spawn small foraging objects in FORAGE_ZONE
+        self.small_objects = self.physics.spawn_small_objects()
         
         # Spawn Agents in HOME_ZONE (Right)
         hx, hy, hw, hh = config.HOME_ZONE
@@ -77,14 +81,13 @@ class SimulationManager:
             vis = Visualizer(self.physics.space, self.pheromones)
             clock = pygame.time.Clock()
         
-        import math
-        while True:
+        while self.timer < config.SIMULATION_TIME_LIMIT:
             if vis:
                 running = vis.handle_events()
                 if not running:
                     break
                 if vis.paused:
-                    vis.update(self.agents, self.timer)
+                    vis.update(self.agents, self.timer, self.small_objects)
                     clock.tick(config.FPS)
                     continue
                     
@@ -113,12 +116,37 @@ class SimulationManager:
                         self.pheromones.deposit_pheromone(agent.body.position, (dx/mag, dy/mag), layer=2)
                         
                 local_grad = self.pheromones.get_gradient(agent.body.position)
-                agent.apply_movement_logic(local_grad, self.physics.target_body, self.agents)
-                
-                # Cleanup detached joints if any logic error caused a state flip
-                if agent.state != "RETRIEVING" and getattr(agent, 'active_joint', None):
+                agent.apply_movement_logic(local_grad, self.physics.target_body, self.agents, self.small_objects)
+
+                # Cleanup detached main-payload joints if state flipped unexpectedly
+                if agent.state != "RETRIEVING" and agent.active_joint:
                     self.physics.space.remove(agent.active_joint)
                     agent.active_joint = None
+
+                # Deliver small object: agent reached home while CARRYING
+                if agent.state == "CARRYING" and agent.carry_joint:
+                    hx, hy = config.HOME_BASE_COORD
+                    dx = agent.body.position.x - hx
+                    dy = agent.body.position.y - hy
+                    if math.sqrt(dx**2 + dy**2) < 30:
+                        # Drop the object
+                        carried = agent.carried_body
+                        self.physics.space.remove(agent.carry_joint)
+                        agent.carry_joint = None
+                        if carried in self.small_objects:
+                            self.small_objects.remove(carried)
+                            for shape in list(carried.shapes):
+                                self.physics.space.remove(shape)
+                            self.physics.space.remove(carried)
+                        agent.carried_body = None
+                        # Strong Layer 1 pheromone burst — "this path leads home"
+                        self.pheromones.deposit_pheromone(
+                            agent.body.position,
+                            (hx - agent.body.position.x, hy - agent.body.position.y),
+                            layer=1
+                        )
+                        agent.state = "SEARCHING"
+                        agent.state_timer = 30
                 
             # 3. Physics Step (Mechanical Stigmergy)
             self.physics.step(dt)
@@ -132,28 +160,32 @@ class SimulationManager:
                 if len(self.target_velocities) == 60:
                     avg_speed = sum(self.target_velocities) / 60.0
                     if avg_speed < 5.0:
-                        # Jam Detected! Trigger Return to Base logic
+                        # Jam detected — attached agents enter SHUFFLING to redistribute
                         for agent in self.agents:
-                            if agent.state == "RETRIEVING" and getattr(agent, 'active_joint', None):
-                                self.physics.space.remove(agent.active_joint)
-                                agent.active_joint = None
-                                agent.state = "RETURN_TO_BASE"
-                                agent.state_timer = 60
+                            if agent.state == "RETRIEVING" and agent.active_joint:
+                                agent._detach()
+                                agent.state = "SHUFFLING"
+                                agent.state_timer = config.SHUFFLE_DURATION_FRAMES
                         self.target_velocities.clear()
             
             if vis:
-                vis.update(self.agents, self.timer)
+                vis.update(self.agents, self.timer, self.small_objects)
                 clock.tick(config.FPS)
             
+            self.timer += dt
+
             # 4. Check Trial End Conditions
             if self.is_trial_successful():
                 if not quiet:
                     print(f"  -> SUCCESS! Time: {self.timer:.2f}s")
                 self.logger.log_trial(self.trial_count, swarm_size, shape_type, True, self.timer)
                 return True
-                
-            self.timer += dt
-        
+
+        if not quiet:
+            print(f"  -> FAILED. Time limit reached.")
+        self.logger.log_trial(self.trial_count, swarm_size, shape_type, False, self.timer)
+        return False
+
 if __name__ == "__main__":
     # Small test run with visualization enabled
     manager = SimulationManager()

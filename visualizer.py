@@ -91,13 +91,23 @@ class Visualizer:
         for agent in agents:
             pos = int(agent.body.position.x), int(agent.body.position.y)
             if agent.state == "SEARCHING":
-                color = (0, 255, 0)
+                color = (0, 200, 0)          # Green
+            elif agent.state == "INTERCEPT_TARGET":
+                color = (0, 200, 255)        # Cyan
+            elif agent.state == "INTERCEPT_SMALL":
+                color = (255, 230, 80)       # Light gold
+            elif agent.state == "CARRYING":
+                color = (200, 150, 0)        # Dark gold
+            elif agent.state == "RETRIEVING":
+                color = (0, 80, 255)         # Blue
+            elif agent.state == "SHUFFLING":
+                color = (255, 220, 0)        # Yellow
             elif agent.state == "RETURN_TO_BASE":
-                color = (255, 165, 0) # Orange
+                color = (255, 140, 0)        # Orange
             elif agent.state == "RETURNING_TO_TARGET":
-                color = (128, 0, 128) # Purple
+                color = (180, 0, 220)        # Purple
             else:
-                color = (0, 100, 255) # Retrieving / Intercepting
+                color = (160, 160, 160)      # Grey fallback
             pygame.draw.circle(self.screen, color, pos, config.AGENT_RADIUS)
             
             # Heading line
@@ -106,7 +116,14 @@ class Visualizer:
                        pos[1] + config.AGENT_RADIUS * math.sin(angle))
             pygame.draw.line(self.screen, (0,0,0), pos, end_pos, 2)
 
-    def update(self, agents, timer):
+    def _draw_small_objects(self, small_objects):
+        """Draw small foraging objects as gold circles."""
+        for body in small_objects:
+            pos = int(body.position.x), int(body.position.y)
+            color = (180, 140, 0) if not getattr(body, 'carried', False) else (255, 200, 0)
+            pygame.draw.circle(self.screen, color, pos, config.SMALL_OBJECT_RADIUS)
+
+    def update(self, agents, timer, small_objects=None):
         """Render a single frame."""
         self.screen.fill((240, 240, 240)) # Light gray background
         
@@ -118,14 +135,27 @@ class Visualizer:
         
         # 2. Physics Layer (Walls and Target Shapes)
         self.space.debug_draw(self.draw_options)
-        
-        # 3. Agent Layer
+
+        # 3. Small foraging objects
+        if small_objects:
+            self._draw_small_objects(small_objects)
+
+        # 4. Agent Layer
         self._draw_agents(agents)
         
         # 4. HUD
-        time_text = self.font.render(f"Time: {timer:.2f}s", True, (0, 0, 0))
-        state_text = self.font.render(f"Paused: {self.paused} | Pheromones (V): {self.show_pheromones}", True, (0,0,0))
-        self.screen.blit(time_text, (10, 10))
-        self.screen.blit(state_text, (10, 30))
+        from collections import Counter
+        state_counts = Counter(a.state for a in agents)
+        attached = sum(1 for a in agents if a.active_joint)
+
+        lines = [
+            f"Time: {timer:.2f}s   |   Attached: {attached}",
+            f"SEARCH:{state_counts.get('SEARCHING',0)}  INTERCEPT:{state_counts.get('INTERCEPT_TARGET',0)}  RETRIEVE:{state_counts.get('RETRIEVING',0)}",
+            f"SHUFFLE:{state_counts.get('SHUFFLING',0)}  RTB:{state_counts.get('RETURN_TO_BASE',0)}  RTT:{state_counts.get('RETURNING_TO_TARGET',0)}",
+            f"Paused(SPACE)  Pheromones(V):{self.show_pheromones}",
+        ]
+        for i, line in enumerate(lines):
+            surf = self.font.render(line, True, (0, 0, 0))
+            self.screen.blit(surf, (10, 10 + i * 18))
         
         pygame.display.flip()
