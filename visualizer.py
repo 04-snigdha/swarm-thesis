@@ -18,6 +18,8 @@ class Visualizer:
         self.space = space
         self.pheromones = pheromones
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
+        # Draw shapes only — suppress joint/constraint lines (they look like ropes)
+        self.draw_options.flags = pymunk.SpaceDebugDrawOptions.DRAW_SHAPES
 
         self.font   = pygame.font.SysFont("Arial", 17)
         self.font_b = pygame.font.SysFont("Arial", 17, bold=True)
