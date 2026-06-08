@@ -81,7 +81,7 @@ def run_batch_experiment(trials_per_condition: int = 50):
             except Exception as e:
                 print(f"\n[ERROR] Trial {trial_count} crashed: {e}")
                 logger.log_trial(trial_count, size, shape, sr, False,
-                                 config.SIMULATION_TIME_LIMIT, error=True)
+                                 config.SIMULATION_TIME_LIMIT, peak_attached=0, error=True)
 
             trial_count += 1
 

@@ -17,7 +17,7 @@ class DataLogger:
     Columns: Trial_ID, Swarm_Size, Shuffle_Randomness, Success, Completion_Time, Error
     """
 
-    HEADERS = ["Trial_ID", "Swarm_Size", "Shuffle_Randomness", "Success", "Completion_Time", "Error"]
+    HEADERS = ["Trial_ID", "Swarm_Size", "Shuffle_Randomness", "Success", "Completion_Time", "Peak_Attached", "Error"]
 
     def __init__(self, run_folder: str):
         """
@@ -43,9 +43,9 @@ class DataLogger:
             self._initialised_shapes.add(shape)
 
     def log_trial(self, trial_id, swarm_size, shape_type, shuffle_randomness,
-                  success, completion_time, error=False):
+                  success, completion_time, peak_attached=0, error=False):
         self._ensure_header(shape_type)
         with open(self._path(shape_type), mode='a', newline='') as f:
             csv.writer(f).writerow(
-                [trial_id, swarm_size, shuffle_randomness, success, completion_time, error]
+                [trial_id, swarm_size, shuffle_randomness, success, completion_time, peak_attached, error]
             )

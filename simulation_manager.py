@@ -70,6 +70,7 @@ class SimulationManager:
         sr = config.SHUFFLE_RANDOMNESS
 
         self.reset_environment(swarm_size, shape_type)
+        self.peak_attached = 0
         if trial_id is not None:
             self.trial_count = trial_id
         else:
@@ -101,6 +102,8 @@ class SimulationManager:
             
             # 2. Agent Decisions & Vector Deposition
             num_attached = len([a for a in self.agents if getattr(a, 'active_joint', None)])
+            if num_attached > self.peak_attached:
+                self.peak_attached = num_attached
             for agent in self.agents:
                 # Conditional Stigmergy: First agent acts as beacon.
                 if agent.state == "RETRIEVING" and num_attached > 0 and getattr(agent, 'active_joint', None):
@@ -184,16 +187,16 @@ class SimulationManager:
                 if not quiet:
                     print(f"  -> SUCCESS! Time: {self.timer:.2f}s")
                 if self.logger:
-                    self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, True, self.timer)
+                    self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, True, self.timer, peak_attached=self.peak_attached)
                 return True
 
         if not quiet:
             print(f"  -> FAILED. Time limit reached.")
         if self.logger:
-            self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, False, self.timer)
+            self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, False, self.timer, peak_attached=self.peak_attached)
         return False
 
 if __name__ == "__main__":
     # Visual test run — no logger needed
     manager = SimulationManager(logger=None)
-    manager.run_trial(20, "Square", visualize=True)
+    manager.run_trial(35, "Square", visualize=True)
