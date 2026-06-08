@@ -29,12 +29,13 @@ HUD_WIDTH = 280          # sidebar panel width (window = ARENA_WIDTH + HUD_WIDTH
 TARGET_SHAPES = ["Circle", "Square", "L-shape", "C-shape"]
 GAP_WIDTH = 150
 WALL_THICKNESS = 20
+ANT_PASSAGE_WIDTH = 15   # narrow holes ants fit through; payload (60 px+) cannot
 
 # --- Pheromone (Chemical) --- Stigmergy Parameters ---
 LAYER_0_DECAY_RATE = 0.90  # Fast decay (Search)
 LAYER_1_DECAY_RATE = 0.98  # Slow decay (Transport/Home) — trail must persist long enough to recruit
-LAYER_2_DECAY_RATE = 0.99  # Low decay (Help-Signal)
-PHEROMONE_DIFFUSION_RATE = 0.1
+LAYER_2_DECAY_RATE = 0.999  # Very slow decay — trail must persist the full home-to-target journey
+PHEROMONE_DIFFUSION_RATE = 0.05  # lower diffusion = narrower, more directed trail
 GRID_CELL_SIZE = 10
 
 # --- Physics Constants ---
