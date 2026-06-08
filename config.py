@@ -5,7 +5,7 @@ FPS = 60
 SIMULATION_TIME_LIMIT = 180.0 # 180 seconds per trial
 
 # --- Swarm Parameters ---
-SWARM_SIZES = [5, 10, 20, 40]
+SWARM_SIZES = [15, 20, 25, 30, 35]
 AGENT_RADIUS = 5
 AGENT_MASS = 1.0
 AGENT_MAX_SPEED = 25.0
