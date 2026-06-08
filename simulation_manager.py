@@ -42,14 +42,14 @@ class SimulationManager:
         target_pos = (fx + fw/2, fy + fh/2)
         self.physics.spawn_target_shape(shape_type, target_pos)
 
-        # Spawn small foraging objects in FORAGE_ZONE
-        self.small_objects = self.physics.spawn_small_objects()
+        # Spawn small foraging objects scattered across the full arena
+        self.small_objects = self.physics.spawn_scattered_objects()
         
-        # Spawn Agents in HOME_ZONE (Right)
-        hx, hy, hw, hh = config.HOME_ZONE
+        # Spawn Agents at the ant hole — single emergence point
+        hole_x, hole_y = config.ANT_HOLE
         for _ in range(swarm_size):
-            ax = random.uniform(hx, hx + hw)
-            ay = random.uniform(hy, hy + hh)
+            ax = hole_x + random.uniform(-5, 5)
+            ay = hole_y + random.uniform(-5, 5)
             agent = Agent(self.physics.space, (ax, ay))
             self.agents.append(agent)
 
@@ -58,7 +58,7 @@ class SimulationManager:
             target_pos = self.physics.target_body.position
             hx, hy = config.HOME_BASE_COORD
             dist = math.sqrt((target_pos.x - hx)**2 + (target_pos.y - hy)**2)
-            if dist < 100:
+            if dist < 50:
                 return True
         return False
 
@@ -87,7 +87,7 @@ class SimulationManager:
                 if not running:
                     break
                 if vis.paused:
-                    vis.update(self.agents, self.timer, self.small_objects)
+                    vis.update(self.agents, self.timer, self.small_objects, self.physics.target_body)
                     clock.tick(config.FPS)
                     continue
                     
@@ -169,7 +169,7 @@ class SimulationManager:
                         self.target_velocities.clear()
             
             if vis:
-                vis.update(self.agents, self.timer, self.small_objects)
+                vis.update(self.agents, self.timer, self.small_objects, self.physics.target_body)
                 clock.tick(config.FPS)
             
             self.timer += dt
@@ -189,4 +189,4 @@ class SimulationManager:
 if __name__ == "__main__":
     # Small test run with visualization enabled
     manager = SimulationManager()
-    manager.run_trial(20, "L-shape", visualize=True)
+    manager.run_trial(20, "Square", visualize=True)
