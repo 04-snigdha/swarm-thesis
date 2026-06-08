@@ -58,7 +58,7 @@ def agent_target_post_solve(arbiter, space, data):
             
             # (a, b, anchor_a, anchor_b)
             joint = pymunk.PivotJoint(agent.body, target_body, (0, 0), anchor_on_target)
-            joint.max_force = 10000  # compliant grip
+            joint.max_force = 1500  # limited grip — heavy payload needs many ants
             space.add(joint)
             agent.active_joint = joint
 
@@ -99,7 +99,7 @@ class PhysicsEngine:
             wall.friction = config.FRICTION
             self.space.add(wall)
 
-    def spawn_target_shape(self, shape_type, position, mass=10.0):
+    def spawn_target_shape(self, shape_type, position, mass=config.TARGET_MASS):
         """Spawns a dynamic target shape for the swarm to manipulate."""
         if shape_type == "Circle":
             radius = 30
@@ -158,10 +158,29 @@ class PhysicsEngine:
         self.target_body = body
         return body
 
-    def spawn_small_objects(self, count=config.SMALL_OBJECT_COUNT):
-        """Spawns small foraging objects randomly inside the FORAGE_ZONE."""
+    def spawn_scattered_objects(self, count=config.SMALL_OBJECT_COUNT):
+        """Spawns small foraging objects randomly across the full arena."""
         import random
-        fx, fy, fw, fh = config.FORAGE_ZONE
+        margin = config.WALL_THICKNESS + config.SMALL_OBJECT_RADIUS + 5
+        bodies = []
+        for _ in range(count):
+            x = random.uniform(margin, config.ARENA_WIDTH - margin)
+            y = random.uniform(margin, config.ARENA_HEIGHT - margin)
+            body = pymunk.Body(config.SMALL_OBJECT_MASS, float('inf'))
+            body.position = (x, y)
+            body.carried = False
+            shape = pymunk.Circle(body, config.SMALL_OBJECT_RADIUS)
+            shape.elasticity = config.ELASTICITY
+            shape.friction = config.FRICTION
+            shape.collision_type = config.COLLISION_TYPE_SMALL
+            self.space.add(body, shape)
+            bodies.append(body)
+        return bodies
+
+    def spawn_small_objects(self, count=config.SMALL_OBJECT_COUNT, zone=None):
+        """Spawns small foraging objects randomly inside zone (defaults to FORAGE_ZONE)."""
+        import random
+        fx, fy, fw, fh = zone if zone else config.FORAGE_ZONE
         bodies = []
         for _ in range(count):
             x = random.uniform(fx + config.SMALL_OBJECT_RADIUS, fx + fw - config.SMALL_OBJECT_RADIUS)
