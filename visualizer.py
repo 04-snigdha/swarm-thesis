@@ -19,9 +19,9 @@ class Visualizer:
         self.pheromones = pheromones
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
 
-        self.font   = pygame.font.SysFont("Arial", 14)
-        self.font_b = pygame.font.SysFont("Arial", 14, bold=True)
-        self.font_s = pygame.font.SysFont("Arial", 12)
+        self.font   = pygame.font.SysFont("Arial", 17)
+        self.font_b = pygame.font.SysFont("Arial", 17, bold=True)
+        self.font_s = pygame.font.SysFont("Arial", 14)
 
         self.show_pheromones = True
         self.paused = False
@@ -68,28 +68,19 @@ class Visualizer:
                     pygame.draw.line(self.screen, (140, 0, 160), (cx, cy), (ex, ey), 3)
 
     def _draw_zones(self):
-        zone_surf = pygame.Surface((self.sim_w, self.sim_h), pygame.SRCALPHA)
-        fx, fy, fw, fh = config.FORAGE_ZONE
-        pygame.draw.rect(zone_surf, (255, 0, 0, 30), (fx, fy, fw, fh))
-        hx, hy, hw, hh = config.HOME_ZONE
-        pygame.draw.rect(zone_surf, (0, 255, 0, 30), (hx, hy, hw, hh))
-        self.screen.blit(zone_surf, (0, 0))
-
-        lf = pygame.font.SysFont("Arial", 12, bold=True)
-        self.screen.blit(lf.render("FORAGE", True, (180, 60, 60)),  (fx + 4, fy + 4))
-        self.screen.blit(lf.render("HOME ZONE", True, (40, 140, 40)), (hx + 4, hy + 4))
-
+        # Only show the HOME target marker — no zone rectangles
         hbx, hby = config.HOME_BASE_COORD
         pygame.draw.circle(self.screen, (0, 180, 0), (hbx, hby), 10)
         pygame.draw.circle(self.screen, (0, 180, 0), (hbx, hby), 50, 2)
+        lf = pygame.font.SysFont("Arial", 13, bold=True)
         self.screen.blit(lf.render("HOME", True, (0, 140, 0)), (hbx - 14, hby + 14))
 
     def _draw_agents(self, agents):
         STATE_COL = {
             "SEARCHING":          (0, 200, 0),
             "INTERCEPT_TARGET":   (0, 200, 255),
-            "INTERCEPT_SMALL":    (255, 230, 80),
-            "CARRYING":           (200, 150, 0),
+            "INTERCEPT_SMALL":    (255, 100, 160),   # pink
+            "CARRYING":           (140, 80,  40),    # brown
             "RETRIEVING":         (0, 80, 255),
             "SHUFFLING":          (255, 220, 0),
             "RETURN_TO_BASE":     (255, 140, 0),
@@ -193,8 +184,8 @@ class Visualizer:
             ("Shuffling",           "SHUFFLING",           (255, 220, 0)),
             ("Return to base",      "RETURN_TO_BASE",      (255, 140, 0)),
             ("Return to payload",   "RETURNING_TO_TARGET", (180, 0, 220)),
-            ("Intercept small obj", "INTERCEPT_SMALL",     (255, 230, 80)),
-            ("Carrying small obj",  "CARRYING",            (200, 150, 0)),
+            ("Intercept small obj", "INTERCEPT_SMALL",     (255, 100, 160)),
+            ("Carrying small obj",  "CARRYING",            (140, 80,  40)),
         ]
         for label, key, col in STATES:
             n = sc.get(key, 0)
