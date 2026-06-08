@@ -148,8 +148,11 @@ class Agent:
             if self.active_joint:
                 self.state = "RETRIEVING"
             elif self.state_timer <= 0 and not self.vision_query(target_body):
-                self.state = "SEARCHING"
-                self.state_timer = 60
+                # Only give up if the pheromone trail has also gone cold
+                help_mag = math.sqrt(help_vec[0]**2 + help_vec[1]**2)
+                if help_mag < 0.05:
+                    self.state = "SEARCHING"
+                    self.state_timer = 60
 
         # ------------------------------------------------------------------ #
         # 2. Movement                                                          #
