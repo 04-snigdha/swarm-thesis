@@ -2,19 +2,50 @@
 import csv
 import os
 
+
 class DataLogger:
-    def __init__(self, filename="results.csv"):
-        self.filename = filename
-        self.file_exists = os.path.exists(self.filename)
-        
-        # Initialize CSV with headers if it doesn't exist
-        if not self.file_exists:
-            with open(self.filename, mode='w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(["Trial_ID", "Swarm_Size", "Shape", "Success", "Completion_Time", "Error"])
-                
-    def log_trial(self, trial_id, swarm_size, shape_type, success, completion_time, error=False):
-        """Logs the results of a single trial."""
-        with open(self.filename, mode='a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([trial_id, swarm_size, shape_type, success, completion_time, error])
+    """
+    Writes one CSV per shape into a timestamped results folder.
+
+    Folder layout:
+        results/<run_id>/
+            Circle.csv
+            Square.csv
+            L-shape.csv
+            C-shape.csv
+
+    Columns: Trial_ID, Swarm_Size, Shuffle_Randomness, Success, Completion_Time, Error
+    """
+
+    HEADERS = ["Trial_ID", "Swarm_Size", "Shuffle_Randomness", "Success", "Completion_Time", "Error"]
+
+    def __init__(self, run_folder: str):
+        """
+        Parameters
+        ----------
+        run_folder : str
+            Path to the timestamped folder for this experiment run.
+            Created automatically if it does not exist.
+        """
+        self.run_folder = run_folder
+        os.makedirs(run_folder, exist_ok=True)
+        self._initialised_shapes: set = set()
+
+    def _path(self, shape: str) -> str:
+        return os.path.join(self.run_folder, f"{shape}.csv")
+
+    def _ensure_header(self, shape: str):
+        path = self._path(shape)
+        if shape not in self._initialised_shapes:
+            if not os.path.exists(path):
+                with open(path, mode='w', newline='') as f:
+                    csv.writer(f).writerow(self.HEADERS)
+            self._initialised_shapes.add(shape)
+
+    def log_trial(self, trial_id, swarm_size, shape_type, shuffle_randomness,
+                  success, completion_time, error=False):
+        self._ensure_header(shape_type)
+        with open(self._path(shape_type), mode='a', newline='') as f:
+            csv.writer(f).writerow(
+                [trial_id, swarm_size, shuffle_randomness, success, completion_time, error]
+            )

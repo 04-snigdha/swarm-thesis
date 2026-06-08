@@ -14,11 +14,11 @@ except ImportError:
     Visualizer = None
 
 class SimulationManager:
-    def __init__(self):
+    def __init__(self, logger: DataLogger = None):
         self.physics = PhysicsEngine()
         self.pheromones = PheromoneGrid()
         self.agents = []
-        self.logger = DataLogger()
+        self.logger = logger  # injected by experiment runner; None = no logging
         self.timer = 0.0
         self.trial_count = 0
         self.target_shape_type = None
@@ -62,16 +62,21 @@ class SimulationManager:
                 return True
         return False
 
-    def run_trial(self, swarm_size, shape_type, trial_id=None, quiet=False, visualize=False):
+    def run_trial(self, swarm_size, shape_type, shuffle_randomness=None, trial_id=None, quiet=False, visualize=False):
         """Runs a single simulation trial."""
+        # Apply shuffle randomness for this trial (falls back to config default)
+        if shuffle_randomness is not None:
+            config.SHUFFLE_RANDOMNESS = shuffle_randomness
+        sr = config.SHUFFLE_RANDOMNESS
+
         self.reset_environment(swarm_size, shape_type)
         if trial_id is not None:
             self.trial_count = trial_id
         else:
             self.trial_count += 1
-        
+
         if not quiet:
-            print(f"Starting Trial {self.trial_count}: Size {swarm_size}, Shape {shape_type}")
+            print(f"Starting Trial {self.trial_count}: Size {swarm_size}, Shape {shape_type}, Shuffle {sr:.2f}")
         
         dt = 1.0 / config.FPS
         
@@ -178,15 +183,17 @@ class SimulationManager:
             if self.is_trial_successful():
                 if not quiet:
                     print(f"  -> SUCCESS! Time: {self.timer:.2f}s")
-                self.logger.log_trial(self.trial_count, swarm_size, shape_type, True, self.timer)
+                if self.logger:
+                    self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, True, self.timer)
                 return True
 
         if not quiet:
             print(f"  -> FAILED. Time limit reached.")
-        self.logger.log_trial(self.trial_count, swarm_size, shape_type, False, self.timer)
+        if self.logger:
+            self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, False, self.timer)
         return False
 
 if __name__ == "__main__":
-    # Small test run with visualization enabled
-    manager = SimulationManager()
+    # Visual test run — no logger needed
+    manager = SimulationManager(logger=None)
     manager.run_trial(20, "Square", visualize=True)

@@ -15,8 +15,11 @@ ANT_HOLE = (720, 350)      # single spawn point (simulates colony entrance)
 # --- Stochastic Shuffling ---
 # 0.0 = pure orbital redistribution around target (CVT-like)
 # 1.0 = full Brownian random walk during shuffle
-SHUFFLE_RANDOMNESS = 0.5
-SHUFFLE_DURATION_FRAMES = 120  # 2 seconds at 60 FPS
+SHUFFLE_RANDOMNESS = 0.5          # runtime value — overwritten by experiment runner
+SHUFFLE_DURATION_FRAMES = 120     # 2 seconds at 60 FPS
+
+# Levels swept in the batch experiment (the third independent variable)
+SHUFFLE_RANDOMNESS_LEVELS = [0.0, 0.25, 0.5, 0.75, 1.0]
 
 # --- Global Navigation Parameters ---
 HOME_BASE_COORD = (700, 350)
