@@ -56,15 +56,15 @@ class Visualizer:
                 hvx, hvy = self.pheromones.grid[r, c, 1, 0], self.pheromones.grid[r, c, 1, 1]
                 hmag = math.sqrt(hvx**2 + hvy**2)
                 if hmag > 0.05:
-                    ex = cx + (hvx / hmag) * cell
-                    ey = cy + (hvy / hmag) * cell
+                    ex = cx + (hvx / hmag) * cell * 2
+                    ey = cy + (hvy / hmag) * cell * 2
                     pygame.draw.line(self.screen, (0, 0, 220), (cx, cy), (ex, ey), 2)
 
                 helpvx, helpvy = self.pheromones.grid[r, c, 2, 0], self.pheromones.grid[r, c, 2, 1]
                 helpmag = math.sqrt(helpvx**2 + helpvy**2)
                 if helpmag > 0.05:
-                    ex = cx + (helpvx / helpmag) * cell
-                    ey = cy + (helpvy / helpmag) * cell
+                    ex = cx + (helpvx / helpmag) * cell * 2
+                    ey = cy + (helpvy / helpmag) * cell * 2
                     pygame.draw.line(self.screen, (140, 0, 160), (cx, cy), (ex, ey), 3)
 
     def _draw_zones(self):
