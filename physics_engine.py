@@ -84,14 +84,24 @@ class PhysicsEngine:
             pymunk.Segment(static_body, (width, 0), (width, height), wall_thickness)
         ]
         
-        # Central wall with gap (split arena vertically)
+        # Central wall with one payload gap (centre) and two narrow ant passages
         mid_x = width / 2
         gap_start_y = (height / 2) - (gap_size / 2)
-        gap_end_y = (height / 2) + (gap_size / 2)
-        
+        gap_end_y   = (height / 2) + (gap_size / 2)
+
+        p = config.ANT_PASSAGE_WIDTH / 2
+        # Ant passage 1: ~20 % down the wall (y ≈ 160)
+        ap1 = height * 0.20
+        # Ant passage 2: ~80 % down the wall (y ≈ 640)
+        ap2 = height * 0.80
+
         central_walls = [
-            pymunk.Segment(static_body, (mid_x, 0), (mid_x, gap_start_y), wall_thickness),
-            pymunk.Segment(static_body, (mid_x, gap_end_y), (mid_x, height), wall_thickness)
+            # Upper section — split by ant passage 1
+            pymunk.Segment(static_body, (mid_x, 0),          (mid_x, ap1 - p), wall_thickness),
+            pymunk.Segment(static_body, (mid_x, ap1 + p),    (mid_x, gap_start_y), wall_thickness),
+            # Lower section — split by ant passage 2
+            pymunk.Segment(static_body, (mid_x, gap_end_y),  (mid_x, ap2 - p), wall_thickness),
+            pymunk.Segment(static_body, (mid_x, ap2 + p),    (mid_x, height),  wall_thickness),
         ]
         
         for wall in boundaries + central_walls:
