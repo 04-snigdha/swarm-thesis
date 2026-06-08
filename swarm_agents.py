@@ -157,11 +157,14 @@ class Agent:
         hx, hy = config.HOME_BASE_COORD
 
         if self.state == "SEARCHING":
-            # Correlated random walk — gentle heading drift, no spontaneous spins
             self.life_timer += 1
-            self.heading += random.uniform(-0.03, 0.03)
+            # Correlated random walk with meaningful heading drift
+            self.heading += random.uniform(-0.10, 0.10)
+            # Occasional levy-style sharp turn (~every 3 s)
+            if random.random() < 0.005:
+                self.heading += random.uniform(-math.pi / 2, math.pi / 2)
 
-            # First 5 s: nudge heading leftward to clear the home zone
+            # First 5 s: nudge heading leftward to leave the ant hole
             if self.life_timer < 300:
                 target_h = math.pi
                 diff = (target_h - self.heading + math.pi) % (2 * math.pi) - math.pi
@@ -169,6 +172,11 @@ class Agent:
 
             vx = math.cos(self.heading) * self.max_speed
             vy = math.sin(self.heading) * self.max_speed
+
+            # Wall-stall escape: if barely moving, pick a fresh random heading
+            cur_spd = math.sqrt(self.body.velocity.x**2 + self.body.velocity.y**2)
+            if cur_spd < 5.0:
+                self.heading = random.uniform(0, 2 * math.pi)
 
         elif self.state == "INTERCEPT_TARGET":
             visible = self.vision_query(target_body)
@@ -196,7 +204,7 @@ class Agent:
             dx, dy = hx - self.body.position.x, hy - self.body.position.y
             mag = math.sqrt(dx**2 + dy**2)
             num_attached = max(1, len([a for a in all_agents if a.active_joint]))
-            push_mag = (self.max_speed * 10) / num_attached
+            push_mag = (self.max_speed * 2) / num_attached
 
             if mag > 0:
                 vx = (dx / mag) * push_mag
