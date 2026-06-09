@@ -1,0 +1,34 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+Collective transport — the coordinated movement of an object by a group of agents — is one of the most studied and most challenging problems at the intersection of swarm robotics and biological systems. It demands that a decentralized group, with no shared memory or global communication, maintain coherent directional force while continuously resolving conflicts between individual behaviours and collective goals. Understanding how such coordination emerges, and how it can be replicated or improved in engineered systems, remains an open and practically important research question.
+
+Nature offers compelling existence proofs. The longhorn crazy ant \textit{Paratrechina longicornis} cooperatively transports food items that far exceed the carrying capacity of any single individual. Field studies have revealed two complementary coordination mechanisms operating simultaneously in such colonies. The first is mechanical stigmergy: agents share a physical load, and the forces each ant exerts are communicated implicitly through the object itself. An ant that pulls in an unproductive direction is resisted by the collective, and over time agents tend to align with the dominant force vector. The second mechanism is chemical stigmergy: pheromone trails reinforce successful paths and recruit additional workers, biasing the swarm toward previously rewarding routes. Together, these mechanisms allow ant colonies to solve transport problems of remarkable complexity without any centralized planner.
+
+A particularly revealing aspect of ant transport is how colonies handle obstacles and geometric deadlocks. When a large food item becomes wedged against a wall or caught in a corner, individual ants cannot diagnose the cause; they have no model of the object's geometry or of the configuration space. Yet colonies reliably escape such deadlocks through a process of collective oscillation and stochastic repositioning. Some ants remain committed to the current direction of motion while others, having momentarily detached and reattached at new positions, introduce angular perturbations. This noise-driven mechanism maps onto what roboticists recognize as the Piano Mover's Problem: the challenge of navigating a rigid body through constrained space by exploiting the full configuration space, including rotational degrees of freedom that are not immediately obvious from the current position.
+
+The Piano Mover's Problem becomes especially acute when the payload is non-convex. A convex object, such as a circle or a square, has a configuration space in which any two poses can be connected by a continuous path that avoids collision, given sufficient clearance. Non-convex objects — L-shapes, C-shapes, U-shapes — introduce cavities and concavities that can trap both the object and the agents attached to it. An agent inside a concavity may apply force in a direction that opposes the net motion of the group; agents on the outer surface may be geometrically unable to compensate. The result is a class of deadlocks that cannot be resolved by simply adding more agents or increasing force.
+
+Despite the practical importance of payload geometry, the swarm robotics literature has devoted comparatively little attention to it. The majority of collective transport studies use circular or rectangular payloads, which are geometrically benign. The few studies that have examined non-convex shapes tend to focus on planning-based approaches or centralized controllers, which do not reflect the decentralized, stigmergy-driven systems found in biological collectives or envisioned for low-cost robotic swarms. In particular, the interaction between payload geometry and stochastic shuffling strategies — that is, the deliberate, temporally structured randomisation of agent positions following a detected jam — has not been systematically investigated.
+
+This thesis addresses that gap. Using a 2D physics simulation built on the Pymunk rigid-body engine, it examines how four payload shapes (Circle, Square, L-shape, and C-shape) interact with a continuously variable stochastic shuffling parameter (\texttt{SHUFFLE\_RANDOMNESS}) across a range of swarm sizes. The simulation implements both mechanical and chemical stigmergy in a manner faithful to the biological literature, and records trial-level outcome data that permits both aggregate statistical analysis and mediation modelling.
+
+Four research questions guide the investigation:
+
+\begin{enumerate}
+    \item To what extent does payload shape (convex versus non-convex) affect collective transport success rate in a decentralized swarm?
+    \item How does \texttt{SHUFFLE\_RANDOMNESS} level interact with payload shape to influence transport success rate?
+    \item Is there a critical swarm size threshold beyond which additional agents no longer improve success rate, particularly for non-convex payload shapes?
+    \item Does Peak\_Attached — the maximum simultaneous attachment count observed during a trial — mediate the relationship between swarm size and transport success?
+\end{enumerate}
+
+Four corresponding hypotheses are proposed:
+
+\begin{enumerate}
+    \item Non-convex shapes (L-shape and C-shape) will exhibit significantly lower success rates than convex shapes (Circle and Square), owing to the geometric deadlocks introduced by their concavities.
+    \item There will exist an optimal intermediate level of shuffle randomness for non-convex shapes. Too little randomness leaves the swarm in a deterministic deadlock from which orbital repositioning alone cannot escape; too much randomness destroys the coordination needed to apply sustained directed force, and success rates will decline.
+    \item For non-convex shapes, success rate will plateau and potentially decline at large swarm sizes, because additional agents competing for attachment positions inside or adjacent to concavities introduce counterproductive force conflicts rather than productive contributions.
+    \item Peak\_Attached will mediate the relationship between swarm size and success, such that the beneficial effect of larger swarms operates partly through an increase in the maximum number of simultaneously attached agents, and this mediation will be weaker or absent for non-convex shapes where additional attachments are geometrically counterproductive.
+\end{enumerate}
+
+The remainder of this thesis is structured as follows. Chapter~\ref{ch:literature_review} reviews the biological and computational literature on collective transport, stochastic repositioning, payload geometry, and stigmergy. Chapter~\ref{ch:methodology} describes the simulation architecture, agent state machine, pheromone model, jam detection mechanism, and experimental design in full detail.

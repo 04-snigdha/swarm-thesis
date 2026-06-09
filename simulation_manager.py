@@ -33,6 +33,10 @@ class SimulationManager:
         self.target_shape_type = shape_type
         self.target_velocities = collections.deque(maxlen=60)
         self.small_objects = []
+        self.num_jams = 0
+        self.total_shuffles = 0
+        self.time_to_first_attachment = None
+        self.final_payload_distance = 0.0
 
         # Pass agents reference to space for physics engine callbacks
         self.physics.space.agents = self.agents
@@ -41,6 +45,11 @@ class SimulationManager:
         fx, fy, fw, fh = config.FORAGE_ZONE
         target_pos = (fx + fw/2, fy + fh/2)
         self.physics.spawn_target_shape(shape_type, target_pos)
+        # Record initial distance from payload to goal for Final_Payload_Distance
+        if self.physics.target_body:
+            tp = self.physics.target_body.position
+            hx, hy = config.HOME_BASE_COORD
+            self._initial_target_dist = max(1.0, math.sqrt((tp.x - hx)**2 + (tp.y - hy)**2))
 
         # Spawn small foraging objects scattered across the full arena
         self.small_objects = self.physics.spawn_scattered_objects()
@@ -104,6 +113,8 @@ class SimulationManager:
             num_attached = len([a for a in self.agents if getattr(a, 'active_joint', None)])
             if num_attached > self.peak_attached:
                 self.peak_attached = num_attached
+            if num_attached > 0 and self.time_to_first_attachment is None:
+                self.time_to_first_attachment = self.timer
             for agent in self.agents:
                 # Conditional Stigmergy: First agent acts as beacon.
                 if agent.state == "RETRIEVING" and num_attached > 0 and getattr(agent, 'active_joint', None):
@@ -169,11 +180,14 @@ class SimulationManager:
                     avg_speed = sum(self.target_velocities) / 60.0
                     if avg_speed < 5.0:
                         # Jam detected — attached agents enter SHUFFLING to redistribute
-                        for agent in self.agents:
-                            if agent.state == "RETRIEVING" and agent.active_joint:
-                                agent._detach()
-                                agent.state = "SHUFFLING"
-                                agent.state_timer = config.SHUFFLE_DURATION_FRAMES
+                        jam_agents = [a for a in self.agents if a.state == "RETRIEVING" and a.active_joint]
+                        if jam_agents:
+                            self.num_jams += 1
+                            self.total_shuffles += len(jam_agents)
+                        for agent in jam_agents:
+                            agent._detach()
+                            agent.state = "SHUFFLING"
+                            agent.state_timer = config.SHUFFLE_DURATION_FRAMES
                         self.target_velocities.clear()
             
             if vis:
@@ -184,17 +198,30 @@ class SimulationManager:
 
             # 4. Check Trial End Conditions
             if self.is_trial_successful():
+                self._compute_final_payload_distance()
                 if not quiet:
                     print(f"  -> SUCCESS! Time: {self.timer:.2f}s")
                 if self.logger:
                     self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, True, self.timer, peak_attached=self.peak_attached)
                 return True
 
+        self._compute_final_payload_distance()
         if not quiet:
             print(f"  -> FAILED. Time limit reached.")
         if self.logger:
             self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, False, self.timer, peak_attached=self.peak_attached)
         return False
+
+    def _compute_final_payload_distance(self):
+        """Normalised fraction of total distance the payload travelled toward goal (0–1)."""
+        if self.physics.target_body:
+            tp = self.physics.target_body.position
+            hx, hy = config.HOME_BASE_COORD
+            current_dist = math.sqrt((tp.x - hx)**2 + (tp.y - hy)**2)
+            dist_moved = self._initial_target_dist - current_dist
+            self.final_payload_distance = round(max(0.0, dist_moved / self._initial_target_dist), 4)
+        else:
+            self.final_payload_distance = 0.0
 
 if __name__ == "__main__":
     # Visual test run — no logger needed

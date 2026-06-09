@@ -1,0 +1,266 @@
+FOLLOW-UP EXPERIMENT RUNNER EVALUATION
+Generated: 2026-06-09
+Files reviewed:
+  - experiment_runner_followup.py
+  - data_logger_followup.py
+  - simulation_manager.py
+  - config.py
+================================================================================
+
+A. WHAT THE RUNNER GETS RIGHT
+================================================================================
+
+1. Explicit random seed per trial (partial credit)
+   Line 60 in experiment_runner_followup.py sets `random.seed(trial_id)` before
+   each trial. This ensures the Python `random` module is reproducible per trial.
+
+2. Timestamped output folder
+   Line 108 creates a run-tagged folder (followup_run_YYYYMMDD_HHMMSS) so
+   multiple runs do not overwrite each other.
+
+3. Shuffle_Duration stored in seconds, not raw frames
+   data_logger_followup.py line 79 converts frames to seconds before writing to
+   CSV. This directly addresses the intelligible-units concern for this column.
+
+4. Separate CSVs per shape
+   The logger writes L-shape.csv and C-shape.csv separately. This makes
+   per-shape analysis straightforward.
+
+5. Progress reporting per condition
+   Lines 185-192 print a summary line when all 50 replicates for a condition
+   complete, giving live feedback on success rates.
+
+6. Config values overridden per trial
+   Lines 63-65 set SHUFFLE_RANDOMNESS, SHUFFLE_DURATION_FRAMES, and
+   SIMULATION_TIME_LIMIT from the runner, not left at config defaults.
+
+
+B. WHAT IS MISSING OR PROBLEMATIC
+================================================================================
+
+--- Issue 1: Seeding is INCOMPLETE and NOT REPRODUCIBLE ---
+
+What supervisor said: "If the seed is not set explicitly it is often derived from
+system time, making replication impossible."
+
+What the runner does: `random.seed(trial_id)` seeds Python's `random` module
+only. The physics engine (pymunk) uses internally computed positions, and
+`reset_environment` in simulation_manager.py lines 51-53 calls
+`random.uniform(-5, 5)` for agent spawn jitter — this IS seeded. However, if
+pymunk or any C extension uses its own RNG, that is not seeded. More critically:
+the multiprocessing Pool (line 147, imap_unordered) runs trials in arbitrary
+order across processes. Each worker process inherits a fresh Python interpreter
+with its own RNG state. `random.seed(trial_id)` is called inside the worker, so
+that specific trial's Python RNG is seeded — but the numpy RNG (if used anywhere
+in swarm_agents.py or physics_engine.py) is NOT seeded. You must check whether
+numpy is imported anywhere and add `numpy.random.seed(trial_id)` alongside the
+`random.seed` call.
+
+Concrete fix (experiment_runner_followup.py, after line 60):
+    import numpy as np      # add at top of file
+    random.seed(trial_id)
+    np.random.seed(trial_id)   # add this line
+
+Also add to the trial result dict a "seed" column so the seed used is recorded
+in the CSV, enabling exact replay of any individual trial.
+
+--- Issue 2: No iterative/pilot protocol ---
+
+What supervisor said: Run 2 replicates (~200 runs) first, check for flaws, then
+run the full experiment. Warned about wasting 24 hours on a bad setup.
+
+What the runner does: Immediately queues all 13,200 trials (line 125). There is
+no pilot flag, no early-stop mechanism, and no way to run a small subset without
+editing the source.
+
+Concrete fix: Add a PILOT_MODE constant near the top:
+    PILOT_MODE = True          # set False for full run
+    PILOT_REPLICATES = 2       # replicates per condition in pilot
+Then in the trial-building loop (lines 121-123), replace TRIALS_PER_CONDITION
+with (PILOT_REPLICATES if PILOT_MODE else TRIALS_PER_CONDITION).
+This means running with PILOT_MODE=True first yields 2*3*11*4*2 = 528 trials
+(~4-5 minutes), allowing verification before committing to the full run.
+
+--- Issue 3: Small objects (stigmergy/foraging mechanic) are NOT disabled ---
+
+What supervisor said: "A rational agent would ignore the small food entirely."
+Small object collection must be dropped from scope.
+
+What the runner does: simulation_manager.py line 46 calls
+`self.physics.spawn_scattered_objects()` unconditionally — 20 small objects are
+spawned every trial (config.py SMALL_OBJECT_COUNT = 20). Lines 135-157 of
+simulation_manager.py include the full CARRYING state logic, delivering small
+objects to home base and depositing pheromone bursts. This mechanic is active
+during every trial and will confound the pheromone field, which is central to
+the transport task.
+
+Concrete fix (two options):
+  Option A — set in config.py: SMALL_OBJECT_COUNT = 0
+  This makes spawn_scattered_objects return an empty list and the CARRYING
+  logic never activates (no objects to pick up). Zero-code change to runner.
+
+  Option B — add to experiment_runner_followup.py before SimulationManager():
+    config.SMALL_OBJECT_COUNT = 0
+  This is safer if config.py is shared and you do not want to change the default.
+
+This is a correctness issue, not cosmetic — leaving it active introduces an
+uncontrolled variable.
+
+--- Issue 4: Vision radius not documented or specified ---
+
+What supervisor said: Vision radius of 50px is "awfully big" and must be
+specified in relative units (relative to arena size or in cm) and justified.
+
+What config.py does: There is no VISION_RADIUS constant in config.py at all.
+The value is presumably hardcoded inside swarm_agents.py. It is not controlled
+or logged by the runner.
+
+Concrete fix:
+  1. Add to config.py:
+       AGENT_VISION_RADIUS = 50   # pixels; = 50/800 = 6.25% of arena width
+       # Arena is 800px wide. If arena = 1 m, vision radius ≈ 6.25 cm.
+       # Justification: agents can detect payload from ~1.5 body-diameters away
+       # (body diameter = 2*AGENT_RADIUS = 10px, so 50px = 5 body-diameters).
+  2. Replace the hardcoded value in swarm_agents.py with config.AGENT_VISION_RADIUS.
+  3. Log AGENT_VISION_RADIUS in the CSV or in a metadata file written at run start.
+
+--- Issue 5: Parameters not written to a locked metadata file ---
+
+What supervisor said: "You have everything completely spelled out so I can
+nitpick at every single point of detail." Parameters must be frozen and
+documented before the final run.
+
+What the runner does: No metadata file is written alongside the CSVs. If
+config.py changes between runs, there is no record of what values were used.
+
+Concrete fix: At the start of run_followup_experiment() (after line 110), write
+a params.txt or params.json into run_folder capturing all relevant config values:
+    import json
+    params = {
+        "SHAPES": SHAPES, "SWARM_SIZES": SWARM_SIZES,
+        "SHUFFLE_RANDOMNESS_LEVELS": SHUFFLE_RANDOMNESS_LEVELS,
+        "SHUFFLE_DURATION_LEVELS": SHUFFLE_DURATION_LEVELS,
+        "TRIALS_PER_CONDITION": TRIALS_PER_CONDITION,
+        "SIMULATION_TIME_LIMIT": SIMULATION_TIME_LIMIT,
+        "AGENT_RADIUS": config.AGENT_RADIUS,
+        "AGENT_MAX_SPEED": config.AGENT_MAX_SPEED,
+        "TARGET_MASS": config.TARGET_MASS,
+        "DAMPING": config.DAMPING,
+        "ARENA_WIDTH": config.ARENA_WIDTH,
+        "ARENA_HEIGHT": config.ARENA_HEIGHT,
+        "SMALL_OBJECT_COUNT": config.SMALL_OBJECT_COUNT,
+        # add AGENT_VISION_RADIUS once added to config
+    }
+    with open(os.path.join(run_folder, "params.json"), "w") as f:
+        json.dump(params, f, indent=2)
+
+--- Issue 6: Race condition in config mutation across worker processes ---
+
+What the runner does: Lines 63-65 mutate config module globals inside the worker
+function (_run_trial). With multiprocessing on Windows (which uses spawn, not
+fork), each worker process gets a fresh copy of config, so mutations in one
+worker do not bleed into another. This is technically safe on Windows. However,
+it is fragile: if the platform changes or Pool is replaced with threads, this
+will silently produce wrong results. The cleaner approach is to pass all
+parameters as arguments to SimulationManager/run_trial rather than via global
+mutation.
+
+This is lower priority but worth noting for reproducibility documentation.
+
+
+C. MOST CRITICAL FIX
+================================================================================
+
+DISABLE SMALL OBJECTS (Issue 3 above).
+
+This is the single most important fix before running. The small-object foraging
+mechanic creates CARRYING agents that deposit strong Layer 1 pheromone bursts at
+home base (simulation_manager.py lines 151-155). These pheromone bursts are
+indistinguishable from transport-trail signals and will corrupt the stigmergy
+field that drives the main payload transport. Every trial is affected. The
+supervisor explicitly said this mechanic must be dropped. It takes one line:
+
+    In config.py, change:  SMALL_OBJECT_COUNT = 20
+    To:                    SMALL_OBJECT_COUNT = 0
+
+Or equivalently add `config.SMALL_OBJECT_COUNT = 0` inside _run_trial before
+constructing SimulationManager. Without this fix, all 13,200 trials produce
+data from a qualitatively different simulation than the one described in the
+thesis.
+
+
+D. CSV COMPLETENESS CHECK
+================================================================================
+
+Supervisor's concern: "The metric set is relatively small and I suspect something
+important might be missing."
+
+Current columns: Trial_ID, Swarm_Size, Shuffle_Randomness, Shuffle_Duration,
+Success, Completion_Time, Peak_Attached, Error.
+
+Assessment: The current set records OUTCOME (success/fail, time) and one
+mediating variable (peak_attached). Given the research question — does stochastic
+shuffling help non-convex shape transport, and how does shuffle randomness level
+interact with swarm size and duration? — several process-level variables are
+absent that would let you distinguish WHY a trial succeeded or failed.
+
+RECOMMENDED ADDITIONAL COLUMNS:
+
+1. Num_Jams_Triggered (int)
+   Count how many times the jam-detection threshold was crossed
+   (simulation_manager.py line 168 triggers shuffling when avg_speed < 5.0 for
+   60 consecutive frames). This is the direct count of how often the stochastic
+   shuffling mechanism activated. Without this, you cannot tell whether a failed
+   trial had 0 jams (agents never attached coherently) or 20 jams (attached but
+   repeatedly failed to reorganise). This is arguably the most important missing
+   metric given the research focus on shuffling.
+
+2. Total_Shuffles (int)
+   Count of individual agents that entered SHUFFLING state across the trial.
+   Num_Jams_Triggered tells you how many jam events occurred; Total_Shuffles
+   tells you how many agents were affected each time (depends on how many were
+   attached at jam time). The ratio Total_Shuffles / Num_Jams_Triggered gives
+   average group size at jam events.
+
+3. Time_To_First_Attachment (float, seconds)
+   Time from trial start until the first agent successfully attaches to the
+   payload. This separates the search phase from the transport phase. If
+   Time_To_First_Attachment is a large fraction of Completion_Time, the
+   bottleneck is recruitment, not transport. If it is small and the trial still
+   fails, the bottleneck is in coordinated pushing.
+
+4. Final_Payload_Distance (float, pixels or normalised 0-1)
+   For FAILED trials: how far the payload moved from its starting position
+   toward home base before time ran out. Without this, all failures look
+   identical in the CSV. A trial where the payload travelled 90% of the way
+   is qualitatively different from one where it never moved. This is especially
+   important for C-shape (which has a concavity that tends to jam in the gap).
+   Normalize as: distance_moved / total_distance_to_goal, so values are 0-1.
+
+5. Shape_Type (already present implicitly via separate CSV files, but should be
+   an explicit column in each row so the two CSVs can be concatenated for
+   combined analysis without losing shape information). Currently Shape_Type is
+   NOT a column in the CSV headers (data_logger_followup.py line 28-37). Add it.
+
+6. Seed (int)
+   The trial_id used as the random seed (= Trial_ID in the current setup, but
+   logging it explicitly confirms which seed was used and guards against
+   future changes to the seeding strategy).
+
+PRIORITY ORDER for additions:
+  1. Num_Jams_Triggered    — directly measures the mechanism under study
+  2. Final_Payload_Distance — distinguishes failure modes
+  3. Shape_Type column      — needed for combined-CSV analysis
+  4. Time_To_First_Attachment — separates search from transport phase
+  5. Total_Shuffles          — complements Num_Jams_Triggered
+  6. Seed                    — reproducibility bookkeeping
+
+IMPLEMENTATION NOTE: Num_Jams_Triggered and Total_Shuffles require a counter
+in simulation_manager.py. Add `self.num_jams = 0` and `self.total_shuffles = 0`
+in reset_environment, then increment them at lines 172-177 where shuffling is
+triggered. Return them from run_trial or expose as manager attributes, then
+include in the result dict in _run_trial and pass to logger.log_trial.
+
+================================================================================
+END OF EVALUATION
+================================================================================

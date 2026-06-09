@@ -51,8 +51,13 @@ FRICTION = 0.5
 HOME_ZONE = (650, 100, 100, 600)  # (x, y, width, height)
 FORAGE_ZONE = (50, 100, 150, 600)
 
+# --- Agent Perception ---
+AGENT_VISION_RADIUS = 50  # pixels; 6.25% of arena width (= ~5 agent body-diameters)
+                           # if arena ≈ 1 m, vision radius ≈ 6.25 cm
+
 # --- Small Foraging Objects ---
-SMALL_OBJECT_COUNT = 20       # scattered across the full arena
+# Set to 0 to disable small-object foraging (out of scope for transport study)
+SMALL_OBJECT_COUNT = 0        # scattered across the full arena
 SMALL_OBJECT_RADIUS = 6
 SMALL_OBJECT_MASS = 1.5
 

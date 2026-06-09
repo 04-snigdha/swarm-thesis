@@ -1,0 +1,44 @@
+\documentclass[12pt,a4paper]{report}
+
+% Packages
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage[hidelinks]{hyperref}
+\usepackage[round,authoryear]{natbib}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\onehalfspacing
+
+\begin{document}
+
+% Title page
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\Large\bfseries Decentralized Collective Transport in Swarm Robotics:\\[0.4em]
+    The Role of Payload Geometry and Stochastic Shuffling\par}
+    \vspace{2cm}
+    {\large Snigdha Sharma\par}
+    \vspace{1cm}
+    {\normalsize Bachelor's Thesis\par}
+    \vspace{0.5cm}
+    {\normalsize 2026\par}
+    \vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\include{chapters/introduction}
+\include{chapters/literature_review}
+\include{chapters/methodology}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

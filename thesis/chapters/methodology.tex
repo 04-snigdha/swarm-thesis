@@ -1,0 +1,111 @@
+\chapter{Methodology}
+\label{ch:methodology}
+
+\section{Simulation Architecture}
+\label{sec:sim_architecture}
+
+The simulation is implemented in Python using Pymunk (a binding to the Chipmunk2D rigid-body physics engine) for physical dynamics and Pygame for rendering. The arena is an 800$\times$800 pixel square, divided into two functional zones by a central vertical wall: a forage zone on the left half and a home zone on the right half. The central wall is solid and impenetrable to the payload, but contains four ant passages — narrow openings of 25 pixels effective width, evenly spaced along the wall — through which individual agents (diameter 10 pixels) can pass freely. Payloads, which have a minimum bounding dimension of approximately 60 pixels, cannot pass through these openings. This geometry enforces the intended collective transport challenge: agents must attach to the payload on the left side of the wall and collectively manoeuvre it through one of the four passages, which requires rotating and aligning the payload appropriately before it can transit.
+
+The colony entrance (referred to as \texttt{ANT\_HOLE}) is located at coordinates (720, 350) in the home zone. Agents spawn from this point and return to it after completing transport. The home base target coordinate is (700, 350); a trial is recorded as a success when the payload centroid comes within 50 pixels of this coordinate.
+
+\section{Agent Design: Eight-State Finite State Machine}
+\label{sec:fsm}
+
+Each agent is governed by an eight-state finite state machine (FSM). The states and their roles are described in Table~\ref{tab:fsm_states}.
+
+\begin{table}[H]
+\centering
+\caption{Agent FSM states and descriptions.}
+\label{tab:fsm_states}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{State} & \textbf{Description} \\
+\midrule
+SEARCHING & Agent performs a Lévy-walk-based random search for the payload. \\
+INTERCEPT\_TARGET & Agent has detected the payload via pheromone or vision and is moving toward it. \\
+RETRIEVING & Agent is attached to the payload and actively applying force toward the home base. \\
+SHUFFLING & Agent has detached following a jam event and is repositioning around the payload. \\
+RETURN\_TO\_BASE & Agent has completed a transport leg and is returning to the home zone. \\
+RETURNING\_TO\_TARGET & Agent is navigating back to the payload location from the home zone. \\
+INTERCEPT\_SMALL & Agent is intercepting a small secondary item (see note below). \\
+CARRYING & Agent is individually carrying a small secondary item to the home zone. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Note:} The INTERCEPT\_SMALL and CARRYING states relate to a secondary foraging behaviour in which agents independently carry small items to the home zone. This behaviour is outside the primary scope of the present study; it is present in the simulation to produce naturalistic agent population dynamics but is not manipulated or analysed as part of the factorial design.
+
+Several key behavioural parameters govern agent movement. During SEARCHING, agents perform a Lévy-inspired random walk: on each simulation frame there is a 0.5\% probability that the agent's heading changes by $\pm\pi/2$ radians, introducing occasional sharp turns while maintaining predominantly straight-line trajectories between turns. Agent heading is also subject to a continuous drift of $\pm0.10$ radians per frame drawn from a uniform distribution, producing smooth curved paths rather than rigid straight lines. The agent vision radius — the range within which an agent can detect pheromone signals or the payload directly — is 50 pixels, corresponding to approximately 6.25\% of the arena width.
+
+\section{Mechanical Stigmergy}
+\label{sec:mech_stigmergy}
+
+When an agent transitions into the RETRIEVING state, it attaches to the payload via a Pymunk \texttt{PivotJoint} constraint. This joint couples the agent's body to the payload body at the point of contact, transmitting forces bidirectionally. The maximum force that the joint can transmit before breaking is set to 1500 N (in simulation units). The payload has a mass of 150 units.
+
+The force magnitude that each attached agent applies is computed as:
+
+\begin{equation}
+F_{\text{agent}} = \frac{v_{\max} \times 2}{n_{\text{attached}}}
+\label{eq:force_scaling}
+\end{equation}
+
+where $v_{\max}$ is the maximum agent speed and $n_{\text{attached}}$ is the current number of attached agents. This scaling ensures that the total applied force does not grow unboundedly with swarm size, and that individual agent contributions diminish as more agents attach. The factor of 2 scales the force to a level sufficient to move the payload when a small number of agents are attached, while preventing excessive forces when the swarm is fully engaged.
+
+\section{Chemical Stigmergy}
+\label{sec:chem_stigmergy}
+
+The pheromone model consists of three layers stored as a NumPy array of shape $(80, 80, 3)$, corresponding to an $80\times80$ grid of cells each covering a $10\times10$ pixel region of the arena. The three layers serve distinct functional roles:
+
+\begin{itemize}
+    \item \textbf{Layer 0 — Search trail:} A general-purpose trail deposited to mark recently visited areas. It decays at a rate of 0.90 per frame, making it a short-memory signal that reflects very recent agent activity.
+    \item \textbf{Layer 1 — Home trail:} Deposited by agents in the RETRIEVING state. The deposition strength is proportional to the current number of attached agents, reinforcing trails laid during successful collective transport episodes. It decays at 0.98 per frame. Each cell stores a vectorial value pointing toward the home base, allowing agents reading the trail to infer the direction of previous successful transport.
+    \item \textbf{Layer 2 — Recruit signal:} Deposited by agents in the RETURN\_TO\_BASE state as they move back from the home zone toward the payload. It decays at 0.999 per frame, making it the most persistent layer. Each cell stores a vectorial value pointing back toward the payload location, guiding newly searching agents toward the site of transport activity.
+\end{itemize}
+
+Diffusion is set to 0.0 across all layers, meaning that pheromone values do not spread to neighbouring cells. This design choice preserves trail sharpness and ensures that directional information is not degraded by spatial spreading.
+
+\section{Jam Detection and Stochastic Shuffling}
+\label{sec:jam_shuffling}
+
+A jam is detected when the payload's mean speed over a rolling window of 60 frames falls below 5.0 pixels per second. This threshold corresponds to approximately one-tenth of the typical transport speed during productive phases, ensuring that jams are distinguished from ordinary slow progress rather than being triggered by momentary slowdowns.
+
+Upon jam detection, all agents currently in the RETRIEVING state detach simultaneously from the payload and transition to the SHUFFLING state for a fixed duration of \texttt{SHUFFLE\_DURATION\_FRAMES}. During the SHUFFLING state, each agent's movement is governed by a blend of two repositioning strategies, controlled by the \texttt{SHUFFLE\_RANDOMNESS} parameter $r \in [0.0, 1.0]$:
+
+\begin{itemize}
+    \item \textbf{Orbital redistribution} ($r = 0.0$): Agents move in a CVT-like (Centroidal Voronoi Tessellation) pattern around the payload perimeter, distributing themselves to evenly spaced angular positions. This is a deterministic, coordination-preserving strategy that corrects for asymmetric attachment distributions without introducing unpredictable perturbations.
+    \item \textbf{Brownian random walk} ($r = 1.0$): Agents perform an isotropic random walk, with each frame's heading drawn uniformly from $[0, 2\pi)$. This maximises positional randomness and can escape deep deadlocks but destroys any coordination structure that existed before the jam.
+    \item \textbf{Intermediate blend} ($0 < r < 1$): On each frame during the SHUFFLING state, the agent's heading is a weighted combination of the orbital target heading and a random heading, with weights $(1-r)$ and $r$ respectively.
+\end{itemize}
+
+After the SHUFFLING duration expires, agents re-enter the INTERCEPT\_TARGET state and attempt to re-attach to the payload.
+
+\section{Experimental Design}
+\label{sec:exp_design}
+
+The study employs a full factorial design crossing three independent variables. The levels of each variable are listed in Table~\ref{tab:ivs}.
+
+\begin{table}[H]
+\centering
+\caption{Independent variables and levels in the factorial experiment.}
+\label{tab:ivs}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Independent Variable} & \textbf{Levels} & \textbf{Number of Levels} \\
+\midrule
+Swarm Size & 15, 20, 25, 30, 35 & 5 \\
+Payload Shape & Circle, Square, L-shape, C-shape & 4 \\
+\texttt{SHUFFLE\_RANDOMNESS} & 0.0, 0.25, 0.5, 0.75, 1.0 & 5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The design yields $5 \times 4 \times 5 = 100$ unique conditions. Each condition is replicated across 50 independent trials, giving a total of 5000 trials.
+
+The primary dependent variable is \textbf{Success Rate}, defined as the proportion of trials within a condition in which the payload reaches the home base target within the time limit. The secondary dependent variable is \textbf{Mean Completion Time} (in seconds), computed over successful trials only. The mediating variable is \textbf{Peak\_Attached}, defined as the maximum number of agents simultaneously attached to the payload at any point during a given trial. This variable is recorded per trial and used in mediation analyses to assess whether swarm size affects success through changes in peak coordination capacity.
+
+Each trial has a time limit of 180 seconds. Trials that do not result in successful transport within this limit are recorded as failures with a completion time of \texttt{NaN}. Random seeds are set equal to the trial ID for each trial, ensuring full reproducibility of individual runs. Output is written to a CSV file per payload shape, with columns: \texttt{Trial\_ID}, \texttt{Swarm\_Size}, \texttt{Shuffle\_Randomness}, \texttt{Success}, \texttt{Completion\_Time}, \texttt{Peak\_Attached}, and \texttt{Error}.
+
+\section{Follow-Up Experiment Design}
+\label{sec:followup}
+
+Preliminary analysis of the factorial results indicated that non-convex shapes (L-shape and C-shape) fail predominantly through stuck failures — trials in which the payload becomes irrecoverably wedged — and that these failures account for approximately 75\% of all failures in those shape conditions, with Peak\_Attached values of 3 or more indicating that multiple agents were attached but unable to collectively advance the payload. This pattern motivated a targeted follow-up experiment restricted to L-shape and C-shape payloads, swarm sizes 25 to 35, and a finer resolution of \texttt{SHUFFLE\_RANDOMNESS} (11 levels: 0.0 to 1.0 in steps of 0.1). Shuffle duration was introduced as an additional independent variable, taking values of 1, 2, 4, and 8 seconds, to test the hypothesis from \citet{springer2022} that longer repositioning periods benefit non-convex shapes with deep deadlocks. The per-trial time limit was increased to 240 seconds to accommodate the longer shuffle durations. The follow-up design thus provides higher resolution on the randomness dimension and separates the effects of randomness level from repositioning duration in the deadlock-prone shape conditions.
