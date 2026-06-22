@@ -1,0 +1,82 @@
+\chapter{Results}
+\label{ch:results}
+
+\section{Overview of Main Experiment}
+\label{sec:results_overview}
+
+The main experiment comprised 5000 trials arranged as a full factorial design crossing four payload shapes, five swarm sizes, and five levels of \texttt{SHUFFLE\_RANDOMNESS}, with 50 independent replications per condition. Across all conditions, 3218 trials resulted in successful payload transport, yielding an overall success rate of 64.4\%. The remaining 1782 trials were recorded as failures, defined as trials in which the payload did not reach the home base target within the 180-second time limit. The distribution of outcomes was markedly uneven across payload shapes, with shape emerging as the dominant source of variance in the data.
+
+\section{Effect of Payload Shape on Success Rate}
+\label{sec:results_shape}
+
+The success rate varied substantially across the four payload shapes. Table~\ref{tab:shape_success} reports the aggregate success rate for each shape, pooled across all swarm sizes and \texttt{SHUFFLE\_RANDOMNESS} levels.
+
+\begin{table}[H]
+\centering
+\caption{Aggregate success rate by payload shape, pooled across all swarm sizes and shuffle randomness levels (1250 trials per shape).}
+\label{tab:shape_success}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Payload Shape} & \textbf{Overall Success Rate} \\
+\midrule
+Circle  & 88.1\% \\
+Square  & 83.9\% \\
+L-shape & 62.4\% \\
+C-shape & 23.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two convex shapes — Circle and Square — achieved success rates of 88.1\% and 83.9\% respectively, differing from each other by only 4.2 percentage points. The two non-convex shapes performed substantially worse: the L-shape achieved 62.4\% and the C-shape achieved 23.0\%. The gap between the best-performing shape (Circle) and the worst (C-shape) is 65.1 percentage points. The success rate ordering is monotonically related to geometric complexity, with the C-shape — which contains a deep concavity — registering a success rate 39.4 percentage points below the next worst shape. This pattern is consistent across all swarm sizes and randomness levels examined.
+
+\section{Effect of Swarm Size}
+\label{sec:results_swarmsize}
+
+The relationship between swarm size and success rate depended substantially on payload shape. For the two convex shapes, success increased monotonically with swarm size: larger swarms consistently produced higher success rates, with the Circle rising from approximately 72\% at size 15 to approximately 98\% at size 35, and the Square showing a similar trajectory. This pattern is consistent with the straightforward expectation that additional agents provide more collective force and reduce the probability of transport failure.
+
+For the L-shape, the relationship was non-monotonic. Success rate increased from size 15 through size 25--30, but then declined at size 35 relative to size 30. This reversal indicates that beyond a certain swarm size, additional agents do not improve and may actively impede L-shape transport.
+
+The C-shape exhibited the most pronounced non-monotonic pattern. Success rate peaked at swarm size 25 and degraded monotonically as size increased beyond that point, with size 35 performing worse than size 25. This result indicates that adding agents beyond the size-25 optimum actively reduces the probability of successful C-shape transport.
+
+\section{Effect of Shuffle Randomness}
+\label{sec:results_sr}
+
+The effect of \texttt{SHUFFLE\_RANDOMNESS} (SR) on success rate also varied by payload shape. For the two convex shapes, SR level had negligible effect across the full range from 0.0 to 1.0: success rates within each swarm-size condition varied by at most a few percentage points across SR levels, with no consistent directional trend.
+
+For the L-shape, a monotonically decreasing relationship was observed: SR = 0.0 (fully structured orbital redistribution) achieved the highest success rate at approximately 74\%, while SR = 1.0 (fully random Brownian walk) achieved the lowest at approximately 52\%. Intermediate SR levels fell between these extremes in a broadly monotonic fashion, indicating that structured repositioning is superior to randomness for this shape.
+
+For the C-shape, no clear relationship between SR and success rate was observed across the 0.0--0.75 range. Success rates at these levels were uniformly low and differed by at most a few percentage points without a consistent directional trend. SR = 1.0 was marginally worse than the other levels in some swarm-size conditions, but the effect was small and inconsistent. This null result across the SR dimension is itself informative: it indicates that the C-shape's predominant failure mode is not addressable by varying randomness alone within the coarse five-level sweep used in the main experiment.
+
+\section{Interaction Between Shape, Size, and Shuffle Randomness}
+\label{sec:results_interaction}
+
+For the convex shapes, the interaction between SR level and swarm size was weak. Swarm size accounted for nearly all the within-shape variance in success rate, with SR contributing only negligible additional variation. The advantage of larger swarms was present at every SR level tested.
+
+For the L-shape, the advantage of SR = 0.0 over higher randomness levels was broadly consistent across swarm sizes but was compressed at size 35. At size 35, the success rate gap between SR = 0.0 and SR = 1.0 narrowed relative to smaller swarm sizes, suggesting that overcrowding at size 35 reduces the benefit of structured orbital redistribution.
+
+For the C-shape, the degradation in success rate at large swarm sizes was consistent across all SR levels. The size-35 deficit relative to size-25 was present at every randomness level, indicating that the non-monotonic size-performance relationship is driven by the payload geometry rather than by the shuffling parameter. No SR level was able to recover the performance loss associated with the size-35 condition.
+
+\section{Completion Time Analysis}
+\label{sec:results_time}
+
+Completion time was recorded only for successful trials. For the convex shapes, mean completion times for successful trials ranged from approximately 60 to 120 seconds, well within the 180-second limit across all conditions. The Square shape had slightly longer mean completion times than the Circle, consistent with its more complex geometry requiring greater rotational alignment during passage through the wall openings.
+
+For the L-shape, mean completion times for successful trials ranged from approximately 90 to 150 seconds. Conditions with smaller swarm sizes and higher SR levels tended to produce longer completion times, consistent with the greater difficulty of those conditions.
+
+For the C-shape, the mean completion time of successful trials was 155--163 seconds across conditions, placing successful trials within 17--25 seconds of the 180-second ceiling. This proximity to the time limit indicates that the 180-second budget was a binding constraint for C-shape transport: a substantial fraction of the recorded failures may correspond to trials in which transport was in progress at the time limit rather than trials in which the transport attempt had irreversibly failed. This observation provided a direct motivation for increasing the per-trial time limit to 240 seconds in the follow-up experiment.
+
+\section{Failure Mode Analysis}
+\label{sec:results_failures}
+
+Of the 1782 failed trials, failures were classified into two categories using Peak\_Attached as a proxy for the nature of the failure. Trials with Peak\_Attached $\leq 2$ were classified as search failures, indicating that agents never attached to the payload in meaningful numbers and transport was not initiated; trials with Peak\_Attached $\geq 3$ were classified as stuck failures, indicating that agents attached to the payload in meaningful numbers but the collective was unable to complete transport.
+
+Across all shapes and conditions, 75.1\% of all failures were stuck failures (1338 out of 1782). Search failures (444 total) were concentrated in the swarm size 15 condition, where insufficient agent numbers resulted in extended or failed search phases across all four shapes. At swarm sizes 25 and above, failures were almost exclusively of the stuck type, with search failures accounting for only a small minority of the total.
+
+The C-shape at swarm size 35 produced the most extreme distribution: of 198 total failures in this condition across all SR levels, 196 were stuck failures and only 2 were search failures. This near-total absence of search failures confirms that at size 35, agents consistently found and attached to the C-shape payload. The predominant failure mode was not a failure to locate or attach to the payload but rather an inability to generate sufficient coordinated net force to complete transport, consistent with the hypothesis that agents attaching within the concavity of the C-shape apply counterproductive forces that offset the contributions of agents on the outer surface.
+
+\section{Follow-Up Experiment (Preliminary)}
+\label{sec:results_followup}
+
+The failure mode analysis motivated a follow-up experiment targeting the L-shape and C-shape conditions. The follow-up design crosses swarm sizes 25, 30, and 35 with 11 levels of \texttt{SHUFFLE\_RANDOMNESS} (0.0--1.0 in steps of 0.1) and four levels of shuffle duration (1, 2, 4, and 8 seconds), yielding 13,200 planned trials at a 240-second time limit. A 528-trial pilot comprising 2 replicates per condition has been completed; the full 50-replicate run is pending and its results will be reported when available.
+
+Preliminary findings from the pilot suggest that shuffle duration is the dominant variable affecting stuck-failure resolution for non-convex shapes. For the C-shape, pilot success rates increased from approximately 74\% at a shuffle duration of 1 second to approximately 94\% at 8 seconds, representing a marked improvement over the best main-experiment C-shape result (23.0\% pooled). The SR level had minimal effect on success rate in the pilot except at SR = 1.0, which substantially degraded C-shape performance relative to all lower randomness levels. These findings are preliminary and statistically underpowered given the two-replicate pilot design; they are reported here as directional indicators only and should be treated as such pending the full run.
