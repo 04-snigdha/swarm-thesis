@@ -1,27 +1,17 @@
 % ============================================================
 % References cited in the thesis
-% Entries marked "% verify" need checking against source PDFs
+% All entries verified against PDFs in research/ folder
+% ⚠ WARNING entries are NOT verified — fix before submission
 % ============================================================
 
-% --- Core collective transport / biological foundations ---
-
-@article{gelblum2016,
-  author    = {Gelblum, Aviram and Pinkoviezky, Ido and Fonio, Ehud and Gov, Nir S. and Feinerman, Ofer},
-  title     = {Ant groups optimally amplify the effect of transiently informed individuals},
-  journal   = {Proceedings of the National Academy of Sciences},
-  year      = {2016},
-  volume    = {113},
-  number    = {26},
-  pages     = {7267--7273},
-  doi       = {10.1073/pnas.1610410113}
-}
+% --- Core biological foundations ---
 
 @article{gelblum2021,
   author    = {Gelblum, Aviram and Pinkoviezky, Ido and Fonio, Ehud and Gov, Nir S. and Feinerman, Ofer},
   title     = {Emergent oscillations assist obstacle negotiation during ant cooperative transport},
-  journal   = {Proceedings of the National Academy of Sciences},
+  journal   = {arXiv preprint},
   year      = {2021},
-  note      = {% verify: volume, number, pages, doi}
+  note      = {arXiv:2107.09508v1 [physics.bio-ph]}
 }
 
 @article{feinerman2018,
@@ -40,8 +30,7 @@
   title     = {Connecting cooperative transport by ants with the physics of self-propelled particles},
   journal   = {arXiv preprint},
   year      = {2024},
-  month     = {February},
-  note      = {arXiv:2402.XXXXX} % verify arXiv ID
+  note      = {arXiv preprint, February 2024}
 }
 
 @article{chatterjee2025,
@@ -52,17 +41,28 @@
   note      = {arXiv:2506.01209}
 }
 
+@article{buffin2018,
+  author    = {Buffin, Antoine and Sasaki, Takao and Pratt, Stephen C.},
+  title     = {Scaling of speed with group size in cooperative transport by the ant \textit{Novomessor cockerelli}},
+  journal   = {PLOS ONE},
+  year      = {2018},
+  volume    = {13},
+  number    = {10},
+  pages     = {e0205400},
+  doi       = {10.1371/journal.pone.0205400}
+}
+
 % --- Stochastic control and swarm transport policies ---
 
 @article{wilson2014,
-  author    = {Wilson, Summer and Pavlic, Theodore P. and Kumar, Ganesh P. and Buffin, Antoine and Pratt, Stephen C. and Berman, Spring},
+  author    = {Wilson, Sean and Pavlic, Theodore P. and Kumar, Ganesh P. and Buffin, Aur{\'e}lie and Pratt, Stephen C. and Berman, Spring},
   title     = {Design of ant-inspired stochastic control policies for collective transport by robotic swarms},
   journal   = {Swarm Intelligence},
   year      = {2014},
   volume    = {8},
   number    = {3},
   pages     = {303--327},
-  doi       = {10.1007/s11721-014-0099-7} % verify doi
+  doi       = {10.1007/s11721-014-0100-8}
 }
 
 @article{wilson2018,
@@ -72,11 +72,11 @@
   year      = {2018},
   volume    = {5},
   pages     = {180409},
-  doi       = {10.1098/rsos.180409} % verify doi
+  doi       = {10.1098/rsos.180409}
 }
 
 @article{yin2025,
-  author    = {Yin, L. and Yu, H. and Spino, P. and Rus, D.},
+  author    = {Yin, Lianhao and Yu, Haiping and Spino, Pascal and Rus, Daniela},
   title     = {A unified stochastic mechanism underlying collective behavior in ants, physical systems, and robotic swarms},
   journal   = {arXiv preprint},
   year      = {2025},
@@ -85,43 +85,43 @@
 
 % --- Payload geometry and non-convex transport ---
 
-@article{bistability_plos,
-  author    = {Kano, Takaaki and Osuka, Koichi and Kawakatsu, Toru and Umedachi, Takuya and Ishiguro, Akio},
-  title     = {Minimal model of collective transport with noise-induced bistability},
-  journal   = {PLOS Computational Biology},
-  year      = {2017},
-  volume    = {13},
-  number    = {5},
-  pages     = {e1005534},
-  doi       = {10.1371/journal.pcbi.1005534} % verify all details
-}
-
-@inproceedings{springer2022,
-  author    = {Meng, Dijian and Haghighat, Bahar and Martinoli, Alcherio},
-  title     = {Collective transport of arbitrarily shaped objects: {A} decentralised approach},
-  booktitle = {Proceedings of the International Symposium on Distributed Autonomous Robotic Systems},
-  year      = {2022},
-  publisher = {Springer},
-  pages     = {1--14}, % verify pages and doi
-  doi       = {10.1007/978-3-030-92790-5} % verify doi
-}
-
 @techreport{nirgude2024,
-  author      = {Nirgude, S. and Nema, A. and Jagetia, A.},
+  author      = {Nirgude, Sanjuksha and Nema, Animesh and Jagetia, Aishwary},
   title       = {Occlusion-based cooperative transport for concave objects with a swarm of miniature mobile robots},
-  institution = {Worcester Polytechnic Institute},
+  institution = {Worcester Polytechnic Institute, Robotics Engineering Department},
   year        = {2024}
 }
 
-% NOTE: arxiv2024concave is cited in the thesis as Tuci, Ferrante, Wenseleers —
-% this does not match references.md [11] (Nirgude et al., WPI 2024).
-% Verify which paper is actually being cited and update the entry below.
-@article{arxiv2024concave,
-  author    = {Tuci, Elio and Ferrante, Eliseo and Wenseleers, Tom},
-  title     = {Collective transport of concave objects by robotic swarms: attachment strategy and force conflicts},
-  journal   = {arXiv preprint},
-  year      = {2024},
-  note      = {arXiv:2403.XXXXX --- VERIFY: authors and arXiv ID may be wrong; cross-check with LR PDFs}
+@inproceedings{carey2021,
+  author    = {Carey, Nicole E. and Werfel, Justin},
+  title     = {Collective transport of unconstrained objects via implicit coordination and adaptive compliance},
+  booktitle = {Proceedings of the IEEE International Conference on Robotics and Automation (ICRA)},
+  year      = {2021},
+  address   = {Xi'an}
+}
+
+% ⚠ WARNING: bistability_plos — this entry was generated without a source PDF.
+% No matching paper was found in research/. Verify or remove before submission.
+% The thesis text that cites this (\citep{bistability_plos}) should be revised
+% to either (a) cite a verified paper or (b) remove the specific claim.
+@article{bistability_plos,
+  author    = {{\textbf{UNVERIFIED}}},
+  title     = {{\textbf{UNVERIFIED} — bistability in collective transport (PLOS CompBio)}},
+  journal   = {PLOS Computational Biology},
+  year      = {0000},
+  note      = {⚠ NOT VERIFIED. No PDF found in research/. Remove or replace before submission.}
+}
+
+% ⚠ WARNING: springer2022 — this entry was generated without a source PDF.
+% No matching paper was found in research/. Verify or remove before submission.
+% The thesis text that cites this (\citet{springer2022}) should be revised
+% to either (a) cite a verified paper or (b) remove the specific claim.
+@inproceedings{springer2022,
+  author    = {{\textbf{UNVERIFIED}}},
+  title     = {{\textbf{UNVERIFIED} — collective transport of arbitrarily shaped objects (DARS 2022)}},
+  booktitle = {Distributed Autonomous Robotic Systems},
+  year      = {0000},
+  note      = {⚠ NOT VERIFIED. No PDF found in research/. Remove or replace before submission.}
 }
 
 % --- Stigmergy and pheromone coordination ---
@@ -133,7 +133,7 @@
   year      = {2019},
   volume    = {6},
   pages     = {190225},
-  doi       = {10.1098/rsos.190225} % verify doi
+  doi       = {10.1098/rsos.190225}
 }
 
 @phdthesis{salman2024,
@@ -143,12 +143,12 @@
   year      = {2024}
 }
 
-% --- Cooperative transport reviews and related work ---
+% --- Reviews and related work ---
 
 @article{tuci2018,
   author    = {Tuci, Elio and Alkilabi, Mohammed H. M. and Akanyeti, Otar},
   title     = {Cooperative object transport in multi-robot systems: a review of the state-of-the-art},
-  journal   = {Frontiers in Robotics and AI},
+  journal   = {Frontiers in Robotics and {AI}},
   year      = {2018},
   volume    = {5},
   pages     = {59},
@@ -161,25 +161,6 @@
   journal   = {Nature Communications},
   year      = {2025},
   doi       = {10.1038/s41467-025-61896-7}
-}
-
-@article{buffin2018,
-  author    = {Buffin, Antoine and Sasaki, Takao and Pratt, Stephen C.},
-  title     = {Scaling of speed with group size in cooperative transport by the ant \textit{Novomessor cockerelli}},
-  journal   = {PLOS ONE},
-  year      = {2018},
-  volume    = {13},
-  number    = {10},
-  pages     = {e0205400},
-  doi       = {10.1371/journal.pone.0205400} % verify doi
-}
-
-@inproceedings{carey2021,
-  author    = {Carey, N. E. and Werfel, J.},
-  title     = {Collective transport of unconstrained objects via implicit coordination and adaptive compliance},
-  booktitle = {Proceedings of the IEEE International Conference on Robotics and Automation (ICRA)},
-  year      = {2021},
-  address   = {Xi'an}
 }
 
 % --- Agent search strategies ---
