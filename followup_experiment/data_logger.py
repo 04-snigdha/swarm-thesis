@@ -1,6 +1,6 @@
-# data_logger_followup.py
+# data_logger.py  (lives in followup_experiment/)
 #
-# Variant of data_logger.py for the follow-up experiment (B+C sweep).
+# Variant of the main data_logger.py for the follow-up experiment (B+C sweep).
 # Adds a Shuffle_Duration column (stored as seconds, not frames).
 #
 # Columns: Trial_ID, Shape_Type, Swarm_Size, Shuffle_Randomness, Shuffle_Duration,

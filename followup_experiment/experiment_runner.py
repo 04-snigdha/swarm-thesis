@@ -1,4 +1,4 @@
-# experiment_runner_followup.py
+# experiment_runner.py  (lives in followup_experiment/)
 #
 # Follow-up experiment: B+C combined sweep.
 #
@@ -13,15 +13,18 @@
 # Time limit raised to 240 s (C-shape successes averaged 155–163 s under 180 s limit).
 # Each worker process creates its own SimulationManager so there is no shared state.
 
+import sys, os
+# Allow imports from the parent swarmthesis directory
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import config
 import json
-import os
 import random
 import numpy as np
 from datetime import datetime
 from multiprocessing import Pool
 from simulation_manager import SimulationManager
-from data_logger_followup import DataLoggerFollowup
+from followup_experiment.data_logger import DataLoggerFollowup
 
 # ---------------------------------------------------------------------------
 # Experiment parameters
@@ -125,7 +128,9 @@ def _run_trial(args):
 def run_followup_experiment():
     # --- Timestamped output folder ---
     run_id = datetime.now().strftime("followup_run_%Y%m%d_%H%M%S")
-    run_folder = os.path.join("results", run_id)
+    # Store results inside followup_experiment/results/ for easy tracking
+    _here = os.path.dirname(os.path.abspath(__file__))
+    run_folder = os.path.join(_here, "results", run_id)
     logger = DataLoggerFollowup(run_folder)
 
     # --- Write locked parameter snapshot alongside results ---
