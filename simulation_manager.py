@@ -199,6 +199,7 @@ class SimulationManager:
             # 4. Check Trial End Conditions
             if self.is_trial_successful():
                 self._compute_final_payload_distance()
+                self.outcome = self._classify_outcome(True)
                 if not quiet:
                     print(f"  -> SUCCESS! Time: {self.timer:.2f}s")
                 if self.logger:
@@ -206,11 +207,25 @@ class SimulationManager:
                 return True
 
         self._compute_final_payload_distance()
+        self.outcome = self._classify_outcome(False)
         if not quiet:
-            print(f"  -> FAILED. Time limit reached.")
+            print(f"  -> FAILED ({self.outcome}). Time limit reached.")
         if self.logger:
             self.logger.log_trial(self.trial_count, swarm_size, shape_type, sr, False, self.timer, peak_attached=self.peak_attached)
         return False
+
+    def _classify_outcome(self, success: bool) -> str:
+        """Return one of SUCCESS / NOT_FOUND / TIMEOUT / STUCK."""
+        if success:
+            return "SUCCESS"
+        if self.peak_attached <= 2:
+            return "NOT_FOUND"
+        # Distinguish timeout (still moving) from stuck (deadlocked)
+        if self.target_velocities:
+            avg_speed = sum(self.target_velocities) / len(self.target_velocities)
+        else:
+            avg_speed = 0.0  # deque was just cleared by a jam — payload is stopped
+        return "TIMEOUT" if avg_speed >= 5.0 else "STUCK"
 
     def _compute_final_payload_distance(self):
         """Normalised fraction of total distance the payload travelled toward goal (0–1)."""

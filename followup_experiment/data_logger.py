@@ -35,6 +35,7 @@ class DataLoggerFollowup:
         "Shuffle_Randomness",
         "Shuffle_Duration",            # seconds, e.g. 1.0 / 2.0 / 4.0 / 8.0
         "Success",
+        "Outcome",                     # SUCCESS / NOT_FOUND / TIMEOUT / STUCK
         "Completion_Time",
         "Peak_Attached",
         "Num_Jams",                    # how many times jam detection triggered
@@ -69,7 +70,7 @@ class DataLoggerFollowup:
 
     def log_trial(self, trial_id, swarm_size, shape_type, shuffle_randomness,
                   shuffle_duration_frames, success, completion_time,
-                  peak_attached=0, num_jams=0, total_shuffles=0,
+                  peak_attached=0, outcome="UNKNOWN", num_jams=0, total_shuffles=0,
                   time_to_first_attachment=None, final_payload_distance=0.0,
                   error=False):
         """
@@ -99,6 +100,7 @@ class DataLoggerFollowup:
                 shuffle_randomness,
                 shuffle_duration_secs,
                 success,
+                outcome,
                 completion_time,
                 peak_attached,
                 num_jams,
