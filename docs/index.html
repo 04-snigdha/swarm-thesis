@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swarm Robotics — Simulation Runs</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:   #1a56f0;
+  --green:  #059669;
+  --amber:  #d97706;
+  --red:    #dc2626;
+  --bg:     #0f0f13;
+  --card:   #1a1a24;
+  --border: #2a2a3a;
+  --text:   #f0eeff;
+  --muted:  #8880a8;
+}
+
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--blue);
+  padding: 40px 32px 28px;
+  text-align: center;
+}
+.kicker {
+  font-size: 10px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,0.7);
+  margin-bottom: 10px;
+}
+h1 {
+  font-size: 48px; font-weight: 900; color: #fff;
+  letter-spacing: -2px; line-height: 1;
+  margin-bottom: 10px;
+}
+.subtitle {
+  font-size: 14px; color: rgba(255,255,255,0.85);
+  line-height: 1.5; max-width: 600px; margin: 0 auto 6px;
+}
+.meta {
+  font-size: 11px; color: rgba(255,255,255,0.55);
+}
+
+/* ── INTRO ── */
+.intro {
+  max-width: 900px; margin: 40px auto; padding: 0 24px;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; text-align: center;
+}
+.stat-n   { font-size: 36px; font-weight: 900; color: var(--blue); line-height: 1; }
+.stat-lbl { font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.4; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ── SECTION ── */
+.section {
+  max-width: 1100px; margin: 0 auto 48px; padding: 0 24px;
+}
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.section-dot {
+  width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+}
+.section-title { font-size: 20px; font-weight: 900; }
+.section-sub   { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+/* ── SUBSECTION ── */
+.subsection { margin-bottom: 28px; }
+.subsection-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 10px;
+}
+
+/* ── GIF GRID ── */
+.gif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.gif-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.gif-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+.gif-card img  { width: 100%; display: block; }
+.gif-label {
+  padding: 8px 12px;
+  font-size: 11px; color: var(--muted); line-height: 1.4;
+}
+.gif-label strong { color: var(--text); display: block; font-size: 12px; margin-bottom: 2px; }
+
+/* outcome badge */
+.badge {
+  display: inline-block; font-size: 9px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 4px; margin-left: 6px;
+  vertical-align: middle;
+}
+.badge.success { background: #ecfdf5; color: #059669; }
+.badge.stuck   { background: #fef2f2; color: #dc2626; }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center; padding: 32px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--muted);
+}
+footer a { color: var(--blue); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Bachelor Thesis · Swarm Robotics · VU Amsterdam · 2026</div>
+  <h1>SWARM RUNS</h1>
+  <div class="subtitle">
+    Collective Transport of Non-Convex Objects by Swarm Robots:<br>
+    The Role of Stochastic Reshuffling in Overcoming Deadlock
+  </div>
+  <div class="meta">Snigdha Sharma &nbsp;·&nbsp; 15,758 simulation trials &nbsp;·&nbsp; 33 recorded runs below</div>
+</header>
+
+<!-- stat cards -->
+<div class="intro">
+  <div class="stat-card">
+    <div class="stat-n" style="color:#34d399;">97.4%</div>
+    <div class="stat-lbl">Circle success rate</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-n" style="color:#60a5fa;">96.7%</div>
+    <div class="stat-lbl">Square success rate</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-n" style="color:#f59e0b;">84.7%</div>
+    <div class="stat-lbl">L-shape success rate</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-n" style="color:#ef4444;">52.1%</div>
+    <div class="stat-lbl">C-shape success rate</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ CIRCLE -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-dot" style="background:#34d399;"></div>
+    <div class="section-title">Circle</div>
+    <div class="section-sub">Convex · 97.4% success · smooth collective transport</div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 25 · SR 0.0 · 50 trials (3 shown)</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Circle_sz25_sr00_trial1.gif" alt="Circle sz25 sr0.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge success">success</span></strong>25 agents · SR=0.0 · orbital CVT</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Circle_sz25_sr00_trial2.gif" alt="Circle sz25 sr0.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge success">success</span></strong>25 agents · SR=0.0 · orbital CVT</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Circle_sz25_sr00_trial3.gif" alt="Circle sz25 sr0.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge success">success</span></strong>25 agents · SR=0.0 · orbital CVT</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 35 · SR 0.0 · 50 trials (3 shown)</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Circle_sz35_sr00_trial1.gif" alt="Circle sz35 sr0.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge success">success</span></strong>35 agents · SR=0.0 · larger swarm</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Circle_sz35_sr00_trial2.gif" alt="Circle sz35 sr0.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge success">success</span></strong>35 agents · SR=0.0 · larger swarm</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Circle_sz35_sr00_trial3.gif" alt="Circle sz35 sr0.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge success">success</span></strong>35 agents · SR=0.0 · larger swarm</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SQUARE -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-dot" style="background:#60a5fa;"></div>
+    <div class="section-title">Square</div>
+    <div class="section-sub">Convex · 96.7% success · corners introduce minor force variance</div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 25 · SR 0.0 · 50 trials (3 shown)</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Square_sz25_sr00_trial1.gif" alt="Square sz25 sr0.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge success">success</span></strong>25 agents · SR=0.0</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Square_sz25_sr00_trial2.gif" alt="Square sz25 sr0.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge success">success</span></strong>25 agents · SR=0.0</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Square_sz25_sr00_trial3.gif" alt="Square sz25 sr0.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge success">success</span></strong>25 agents · SR=0.0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 35 · SR 0.0 · 50 trials (3 shown)</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Square_sz35_sr00_trial1.gif" alt="Square sz35 sr0.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge success">success</span></strong>35 agents · SR=0.0</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Square_sz35_sr00_trial2.gif" alt="Square sz35 sr0.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge success">success</span></strong>35 agents · SR=0.0</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Square_sz35_sr00_trial3.gif" alt="Square sz35 sr0.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge success">success</span></strong>35 agents · SR=0.0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ L-SHAPE -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-dot" style="background:#f59e0b;"></div>
+    <div class="section-title">L-shape</div>
+    <div class="section-sub">Non-convex · 84.7% success · single right-angle concavity</div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 25 · SR 0.0 · 50 trials (3 shown)</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Lshape_sz25_sr00_trial1.gif" alt="Lshape sz25 sr0.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge success">success</span></strong>25 agents · SR=0.0 · orbital CVT</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Lshape_sz25_sr00_trial2.gif" alt="Lshape sz25 sr0.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge success">success</span></strong>25 agents · SR=0.0 · orbital CVT</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Lshape_sz25_sr00_trial3.gif" alt="Lshape sz25 sr0.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge success">success</span></strong>25 agents · SR=0.0 · orbital CVT</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 35 · SR 1.0 (full random) · 50 trials (3 shown) — worst condition</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Lshape_sz35_sr10_trial1.gif" alt="Lshape sz35 sr1.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge stuck">stuck</span></strong>35 agents · SR=1.0 · full Brownian random</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Lshape_sz35_sr10_trial2.gif" alt="Lshape sz35 sr1.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge stuck">stuck</span></strong>35 agents · SR=1.0 · full Brownian random</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Lshape_sz35_sr10_trial3.gif" alt="Lshape sz35 sr1.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge stuck">stuck</span></strong>35 agents · SR=1.0 · full Brownian random</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ C-SHAPE -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-dot" style="background:#ef4444;"></div>
+    <div class="section-title">C-shape</div>
+    <div class="section-sub">Non-convex · 52.1% success · deep symmetric concavity creates geometric deadlock</div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 25 · SR 0.0 · 50 trials (3 shown)</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz25_sr00_trial1.gif" alt="Cshape sz25 sr0.0 trial 1">
+        <div class="gif-label"><strong>Trial 1</strong>25 agents · SR=0.0 · best C-shape condition</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz25_sr00_trial2.gif" alt="Cshape sz25 sr0.0 trial 2">
+        <div class="gif-label"><strong>Trial 2</strong>25 agents · SR=0.0 · best C-shape condition</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz25_sr00_trial3.gif" alt="Cshape sz25 sr0.0 trial 3">
+        <div class="gif-label"><strong>Trial 3</strong>25 agents · SR=0.0 · best C-shape condition</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 35 · SR 0.0 · 50 trials (3 shown) — large swarm, no shuffling</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_trial1.gif" alt="Cshape sz35 sr0.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge stuck">stuck</span></strong>35 agents · SR=0.0 · concavity deadlock</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_trial2.gif" alt="Cshape sz35 sr0.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge stuck">stuck</span></strong>35 agents · SR=0.0 · concavity deadlock</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_trial3.gif" alt="Cshape sz35 sr0.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge stuck">stuck</span></strong>35 agents · SR=0.0 · concavity deadlock</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 35 · SR 1.0 (full random) · 50 trials (3 shown)</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr10_trial1.gif" alt="Cshape sz35 sr1.0 trial 1">
+        <div class="gif-label"><strong>Trial 1 <span class="badge stuck">stuck</span></strong>35 agents · SR=1.0 · full random shuffle</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr10_trial2.gif" alt="Cshape sz35 sr1.0 trial 2">
+        <div class="gif-label"><strong>Trial 2 <span class="badge stuck">stuck</span></strong>35 agents · SR=1.0 · full random shuffle</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr10_trial3.gif" alt="Cshape sz35 sr1.0 trial 3">
+        <div class="gif-label"><strong>Trial 3 <span class="badge stuck">stuck</span></strong>35 agents · SR=1.0 · full random shuffle</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <div class="subsection-label">Size 35 · SR 0.0 · Shuffle Duration 1s vs 8s — the key comparison</div>
+    <div class="gif-grid">
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_dur1s_trial1.gif" alt="Cshape sz35 sr0.0 dur1s trial 1">
+        <div class="gif-label"><strong>1s duration · Trial 1</strong>Short repositioning — agents barely escape concavity</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_dur1s_trial2.gif" alt="Cshape sz35 sr0.0 dur1s trial 2">
+        <div class="gif-label"><strong>1s duration · Trial 2</strong>Short repositioning — agents barely escape concavity</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_dur1s_trial3.gif" alt="Cshape sz35 sr0.0 dur1s trial 3">
+        <div class="gif-label"><strong>1s duration · Trial 3</strong>Short repositioning — agents barely escape concavity</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_dur8s_trial1.gif" alt="Cshape sz35 sr0.0 dur8s trial 1">
+        <div class="gif-label"><strong>8s duration · Trial 1 <span class="badge success">success</span></strong>Long repositioning — agents reach productive outer surface</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_dur8s_trial2.gif" alt="Cshape sz35 sr0.0 dur8s trial 2">
+        <div class="gif-label"><strong>8s duration · Trial 2 <span class="badge success">success</span></strong>Long repositioning — agents reach productive outer surface</div>
+      </div>
+      <div class="gif-card">
+        <img src="gifs/Cshape_sz35_sr00_dur8s_trial3.gif" alt="Cshape sz35 sr0.0 dur8s trial 3">
+        <div class="gif-label"><strong>8s duration · Trial 3 <span class="badge success">success</span></strong>Long repositioning — agents reach productive outer surface</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Snigdha Sharma · Bachelor's Thesis · Vrije Universiteit Amsterdam · 2026</p>
+  <p style="margin-top:6px;">Collective Transport of Non-Convex Objects by Swarm Robots: The Role of Stochastic Reshuffling in Overcoming Deadlock</p>
+</footer>
+
+</body>
+</html>
